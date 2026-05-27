@@ -1,0 +1,4208 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Plataforma de Análisis de Apostamientos y Funciones</title>
+
+  <script src=https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js></script>
+  <script src=https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js></script>
+
+  <style>
+    :root{
+      --bg:#f4f7fb;
+      --card:#ffffff;
+      --primary:#173a63;
+      --primary-2:#24558f;
+      --accent:#0ea5e9;
+      --ok:#16a34a;
+      --warn:#d97706;
+      --danger:#dc2626;
+      --text:#1f2937;
+      --muted:#6b7280;
+      --border:#dbe3ee;
+      --shadow:0 10px 30px rgba(0,0,0,.08);
+      --radius:16px;
+    }
+
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      font-family:Segoe UI, Arial, sans-serif;
+      background:var(--bg);
+      color:var(--text);
+    }
+
+    .topbar{
+      background:linear-gradient(135deg,var(--primary),var(--primary-2));
+      color:#fff;
+      padding:20px 16px;
+      box-shadow:var(--shadow);
+    }
+
+    .topbar h1{
+      margin:0;
+      font-size:28px;
+      font-weight:700;
+    }
+
+    .topbar p{
+      margin:8px 0 0;
+      opacity:.92;
+      font-size:14px;
+    }
+
+    .container{
+      width:min(1680px,96%);
+      margin:20px auto 40px;
+    }
+
+    .toolbar{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-bottom:18px;
+      position:relative;
+    }
+
+    button{
+      border:none;
+      border-radius:12px;
+      padding:12px 16px;
+      font-weight:600;
+      cursor:pointer;
+      transition:.2s ease;
+      font-size:15px;
+    }
+
+    .btn-primary{background:var(--primary); color:#fff;}
+    .btn-primary:hover{background:#102c4d;}
+
+    .btn-secondary{background:#e8eef7; color:var(--primary);}
+    .btn-secondary:hover{background:#dce6f3;}
+
+    .btn-success{background:var(--ok); color:#fff;}
+    .btn-success:hover{background:#12833d;}
+
+    .btn-danger{background:var(--danger); color:#fff;}
+    .btn-danger:hover{background:#b91c1c;}
+
+    .btn-warn{background:var(--warn); color:#fff;}
+    .btn-warn:hover{background:#b15d06;}
+
+    .btn-info{background:#0f766e; color:#fff;}
+    .btn-info:hover{background:#0b5b55;}
+
+    .btn-purple{background:#6d28d9; color:#fff;}
+    .btn-purple:hover{background:#5b21b6;}
+
+    .btn-dark{background:#334155; color:#fff;}
+    .btn-dark:hover{background:#1e293b;}
+
+    .btn-small{
+      padding:7px 10px;
+      font-size:12px;
+      border-radius:10px;
+      min-height:auto;
+    }
+
+    .menu-dropdown{
+      position:relative;
+      display:inline-block;
+    }
+
+    .menu-toggle{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:190px;
+      justify-content:center;
+      box-shadow:var(--shadow);
+    }
+
+    .menu-toggle .menu-icon{
+      font-size:18px;
+      line-height:1;
+    }
+
+    .menu-panel{
+      position:absolute;
+      top:calc(100% + 10px);
+      left:0;
+      min-width:320px;
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:16px;
+      box-shadow:0 18px 40px rgba(0,0,0,.16);
+      padding:10px;
+      display:none;
+      z-index:999;
+    }
+
+    .menu-panel.show{
+      display:block;
+      animation:fadeInMenu .18s ease;
+    }
+
+    @keyframes fadeInMenu{
+      from{opacity:0; transform:translateY(-6px);}
+      to{opacity:1; transform:translateY(0);}
+    }
+
+    .menu-group-title{
+      font-size:12px;
+      font-weight:800;
+      color:var(--muted);
+      text-transform:uppercase;
+      letter-spacing:.4px;
+      padding:8px 10px 6px;
+    }
+
+    .menu-item{
+      width:100%;
+      text-align:left;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      background:#fff;
+      color:var(--text);
+      border-radius:12px;
+      padding:12px 12px;
+      margin-bottom:4px;
+      font-weight:600;
+      border:1px solid transparent;
+    }
+
+    .menu-item:hover{
+      background:#f8fbff;
+      border-color:#d9e5f5;
+    }
+
+    .menu-item.danger-text{
+      color:#b91c1c;
+    }
+
+    .menu-divider{
+      height:1px;
+      background:#e8eef7;
+      margin:8px 4px;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(12,1fr);
+      gap:18px;
+    }
+
+    .card{
+      grid-column:span 12;
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:18px;
+    }
+
+    .card h2{
+      margin:0 0 16px;
+      font-size:20px;
+      color:var(--primary);
+      border-bottom:2px solid #eef3f9;
+      padding-bottom:10px;
+    }
+
+    .section-note{
+      color:var(--muted);
+      font-size:13px;
+      margin-top:-6px;
+      margin-bottom:14px;
+    }
+
+    .subcard{
+      border:1px dashed #c7d6ea;
+      border-radius:14px;
+      padding:14px;
+      margin-top:14px;
+      background:#fbfdff;
+    }
+
+    .subcard h3{
+      margin:0 0 12px;
+      color:var(--primary);
+      font-size:18px;
+    }
+
+    .form-grid{
+      display:grid;
+      grid-template-columns:repeat(12,1fr);
+      gap:14px;
+    }
+
+    .field{
+      grid-column:span 12;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+
+    .field.col-6{grid-column:span 6;}
+    .field.col-4{grid-column:span 4;}
+    .field.col-3{grid-column:span 3;}
+    .field.col-8{grid-column:span 8;}
+    .field.col-2{grid-column:span 2;}
+
+    label{
+      font-size:13px;
+      font-weight:700;
+      color:#334155;
+    }
+
+    input, select, textarea{
+      width:100%;
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:12px 12px;
+      font-size:14px;
+      outline:none;
+      background:#fff;
+      min-height:46px;
+    }
+
+    input:focus, select:focus, textarea:focus{
+      border-color:var(--accent);
+      box-shadow:0 0 0 3px rgba(14,165,233,.12);
+    }
+
+    textarea{
+      min-height:96px;
+      resize:vertical;
+    }
+
+    textarea.readonly-box{
+      background:#f8fbff;
+    }
+
+    .table-wrap{
+      width:100%;
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+      border-radius:12px;
+    }
+
+    table{
+      width:100%;
+      min-width:1450px;
+      border-collapse:collapse;
+      margin-top:10px;
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius:12px;
+      overflow:hidden;
+    }
+
+    th, td{
+      border-bottom:1px solid #e9eef5;
+      padding:10px 8px;
+      text-align:left;
+      font-size:13px;
+      vertical-align:top;
+    }
+
+    th{
+      background:#f6f9fd;
+      color:var(--primary);
+      font-weight:700;
+      position:sticky;
+      top:0;
+      z-index:1;
+    }
+
+    td input, td select, td textarea{
+      font-size:13px;
+      padding:8px 10px;
+      border-radius:10px;
+      min-height:40px;
+    }
+
+    .stats{
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:14px;
+      margin-top:14px;
+    }
+
+    .stat{
+      background:#f8fbff;
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:14px;
+    }
+
+    .stat h3{
+      margin:0 0 6px;
+      font-size:13px;
+      color:var(--muted);
+      font-weight:700;
+    }
+
+    .stat .value{
+      font-size:26px;
+      font-weight:800;
+      color:var(--primary);
+    }
+
+    .pill{
+      display:inline-block;
+      padding:8px 12px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:700;
+      line-height:1.2;
+    }
+
+    .pill-ok{background:#e7f8ed; color:#166534;}
+    .pill-warn{background:#fff4df; color:#92400e;}
+    .pill-danger{background:#fee2e2; color:#991b1b;}
+
+    .summary-box{
+      background:#f8fbff;
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:16px;
+      white-space:pre-line;
+      line-height:1.65;
+      font-size:14px;
+    }
+
+    .danger-link{
+      color:var(--danger);
+      font-weight:700;
+      cursor:pointer;
+      user-select:none;
+    }
+
+    .edit-link{
+      color:#2563eb;
+      font-weight:700;
+      cursor:pointer;
+      user-select:none;
+      margin-right:12px;
+    }
+
+    .copy-link{
+      color:#0f766e;
+      font-weight:700;
+      cursor:pointer;
+      user-select:none;
+      margin-right:12px;
+    }
+
+    .actions-inline{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .footer-note{
+      margin-top:12px;
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    .small-note{
+      font-size:12px;
+      color:var(--muted);
+      margin-top:6px;
+    }
+
+    .editing-banner{
+      display:none;
+      margin-bottom:14px;
+      padding:12px 14px;
+      border-radius:12px;
+      background:#eff6ff;
+      border:1px solid #bfdbfe;
+      color:#1e3a8a;
+      font-weight:600;
+    }
+
+    .autosave-banner{
+      margin-bottom:14px;
+      padding:10px 14px;
+      border-radius:12px;
+      background:#f0fdf4;
+      border:1px solid #bbf7d0;
+      color:#166534;
+      font-weight:600;
+      font-size:13px;
+    }
+
+    .decision-box{
+      margin-top:12px;
+      padding:14px;
+      background:#f8fbff;
+      border:1px solid var(--border);
+      border-radius:12px;
+      line-height:1.5;
+      font-size:14px;
+    }
+
+    .modal{
+      position:fixed;
+      inset:0;
+      background:rgba(15,23,42,.55);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:9999;
+      padding:16px;
+    }
+
+    .modal.show{display:flex;}
+
+    .modal-card{
+      width:min(1150px,100%);
+      max-height:90vh;
+      overflow:auto;
+      background:#fff;
+      border-radius:18px;
+      box-shadow:var(--shadow);
+      padding:18px;
+      border:1px solid var(--border);
+      box-sizing:border-box;
+    }
+
+    #modalDashboard .modal-card{
+      width:min(1280px,96vw);
+    }
+
+    #dashboardContenido{
+      max-width:100%;
+      overflow-x:hidden;
+    }
+
+    .modal-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin-bottom:14px;
+    }
+
+    .modal-header h3{
+      margin:0;
+      color:var(--primary);
+      font-size:22px;
+    }
+
+    .plant-item{
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:14px;
+      margin-bottom:12px;
+      background:#fbfdff;
+    }
+
+    .plant-item h4{
+      margin:0 0 8px;
+      color:var(--primary);
+      font-size:16px;
+    }
+
+    .plant-meta{
+      color:var(--muted);
+      font-size:13px;
+      margin-bottom:10px;
+      line-height:1.5;
+    }
+
+
+    .dashboard-grid{
+      display:grid;
+      grid-template-columns:repeat(12,minmax(0,1fr));
+      gap:14px;
+    }
+
+    .dashboard-card{
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:16px;
+      box-shadow:0 6px 18px rgba(15,23,42,.05);
+      min-width:0;
+    }
+
+    .dashboard-card h4{
+      margin:0 0 12px;
+      font-size:17px;
+      color:var(--primary);
+    }
+
+    .dashboard-kpis{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+      gap:12px;
+      margin-bottom:14px;
+    }
+
+    .dashboard-kpi{
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:16px;
+      box-shadow:0 6px 18px rgba(15,23,42,.05);
+    }
+
+    .dashboard-kpi .kpi-label{
+      font-size:12px;
+      color:var(--muted);
+      margin-bottom:8px;
+    }
+
+    .dashboard-kpi .kpi-value{
+      font-size:28px;
+      font-weight:800;
+      color:#0f172a;
+      line-height:1;
+    }
+
+    .dashboard-kpi .kpi-sub{
+      font-size:12px;
+      color:#64748b;
+      margin-top:8px;
+      line-height:1.4;
+    }
+
+    .dash-controls{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      align-items:end;
+      margin-bottom:14px;
+    }
+
+    .dash-controls .field{
+      min-width:180px;
+      flex:1 1 180px;
+    }
+
+    .dash-span-12{grid-column:span 12;}
+    .dash-span-8{grid-column:span 8;}
+    .dash-span-6{grid-column:span 6;}
+    .dash-span-4{grid-column:span 4;}
+
+    .bar-list{display:flex;flex-direction:column;gap:10px;}
+    .bar-row{display:grid;grid-template-columns:minmax(120px,220px) 1fr 72px;gap:10px;align-items:center;}
+    .bar-label{font-size:13px;font-weight:600;color:#334155;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .bar-track{height:18px;background:#eef2f7;border-radius:999px;overflow:hidden;position:relative;}
+    .bar-fill{height:100%;border-radius:999px;}
+    .bar-value{font-size:12px;color:#475569;text-align:right;font-weight:700;}
+
+    .stack-track{height:20px;background:#eef2f7;border-radius:999px;overflow:hidden;display:flex;}
+    .stack-active{background:#38bdf8;height:100%;}
+    .stack-inactive{background:#f59e0b;height:100%;}
+
+    .status-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+    .status-box{border-radius:14px;padding:14px;color:#0f172a;font-weight:700;cursor:pointer;transition:.18s ease;}
+    .status-box:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(15,23,42,.08);}
+    .status-box.active{outline:3px solid #173a63;outline-offset:2px;}
+    .status-reset-btn{margin-top:10px;padding:8px 12px;font-size:12px;border-radius:999px;background:#e8eef7;color:#173a63;font-weight:700;display:inline-block;cursor:pointer;}
+    .status-reset-btn.active{background:#173a63;color:#fff;}
+    .status-box small{display:block;font-size:12px;font-weight:500;opacity:.85;margin-top:4px;}
+    .status-bajo{background:#fee2e2;border:1px solid #fecaca;}
+    .status-intermedio{background:#fef3c7;border:1px solid #fde68a;}
+    .status-adecuado{background:#dcfce7;border:1px solid #bbf7d0;}
+
+
+    .equiv-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:10px;}
+    .equiv-box{background:#f8fbff;border:1px solid var(--border);border-radius:14px;padding:14px;min-width:0;}
+    .equiv-box .equiv-label{font-size:12px;color:var(--muted);font-weight:700;margin-bottom:8px;}
+    .equiv-box .equiv-value{font-size:26px;font-weight:800;color:#0f172a;line-height:1.1;}
+    .equiv-box .equiv-sub{font-size:12px;color:#64748b;margin-top:8px;line-height:1.35;}
+
+    .legend-row{display:flex;flex-wrap:wrap;gap:14px;margin-top:10px;font-size:12px;color:#475569;}
+    .legend-item{display:flex;align-items:center;gap:6px;}
+    .legend-dot{width:12px;height:12px;border-radius:999px;display:inline-block;}
+
+    .dashboard-table-wrap{
+      width:100%;
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+    }
+
+    .dashboard-table{
+      width:100%;
+      min-width:900px;
+      border-collapse:collapse;
+      font-size:13px;
+      margin-top:0;
+    }
+    .dashboard-table th,.dashboard-table td{padding:10px;border-bottom:1px solid #e5e7eb;vertical-align:top;text-align:left;word-break:break-word;}
+    .dashboard-table th{text-transform:uppercase;font-size:11px;letter-spacing:.03em;color:#64748b;}
+
+    .priority-pill{display:inline-flex;align-items:center;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;}
+    .priority-alta{background:#fee2e2;color:#b91c1c;}
+    .priority-media{background:#fef3c7;color:#92400e;}
+    .priority-baja{background:#dcfce7;color:#166534;}
+
+    .dash-note{font-size:13px;color:#475569;line-height:1.55;margin:0;}
+
+    @media (max-width: 980px){
+      .dash-span-8,.dash-span-6,.dash-span-4,.dash-span-12{grid-column:span 12;}
+      .bar-row{grid-template-columns:1fr;gap:6px;}
+      .bar-value{text-align:left;}
+      .status-strip{grid-template-columns:1fr;}
+      .equiv-grid{grid-template-columns:1fr;}
+      #modalDashboard .modal-card{
+        width:min(100%,96vw);
+        padding:14px;
+      }
+      .dashboard-kpis{
+        grid-template-columns:1fr;
+      }
+    }
+
+    .empty-state{
+      padding:18px;
+      border:1px dashed #cbd5e1;
+      border-radius:14px;
+      background:#f8fafc;
+      color:#475569;
+    }
+
+    .version-panel{
+      display:none;
+      margin-top:12px;
+      padding-top:12px;
+      border-top:1px dashed #d6dfeb;
+    }
+
+    .toggle-title{
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+
+    .toggle-badge{
+      background:#eaf1fb;
+      color:var(--primary);
+      border-radius:999px;
+      font-size:12px;
+      padding:6px 10px;
+      font-weight:700;
+    }
+
+    @media (max-width: 1024px){
+      .field.col-6,.field.col-4,.field.col-3,.field.col-8,.field.col-2{
+        grid-column:span 12;
+      }
+
+      .stats{
+        grid-template-columns:1fr 1fr;
+      }
+    }
+
+    @media (max-width: 700px){
+      .container{
+        width:95%;
+      }
+
+      .topbar h1{
+        font-size:22px;
+      }
+
+      .toolbar{
+        flex-direction:column;
+      }
+
+      .menu-dropdown{
+        width:100%;
+      }
+
+      .menu-toggle{
+        width:100%;
+      }
+
+      .menu-panel{
+        width:100%;
+        min-width:100%;
+        left:0;
+      }
+
+      .actions-inline{
+        flex-direction:column;
+      }
+
+      .actions-inline button{
+        width:100%;
+      }
+
+      .stats{
+        grid-template-columns:1fr;
+      }
+
+      .card{
+        padding:14px;
+      }
+
+      .subcard{
+        padding:12px;
+      }
+
+      input, select, textarea, button{
+        font-size:16px;
+      }
+
+      table{
+        min-width:1300px;
+      }
+    }
+
+    @media print{
+      @page{
+        size:A4 landscape;
+        margin:8mm;
+      }
+
+      *{
+        -webkit-print-color-adjust:exact !important;
+        print-color-adjust:exact !important;
+        color-adjust:exact !important;
+        box-sizing:border-box !important;
+      }
+
+      html,body{
+        width:100% !important;
+        margin:0 !important;
+        padding:0 !important;
+        background:#fff !important;
+        font-size:10px !important;
+        line-height:1.25 !important;
+      }
+
+      .toolbar,.no-print,button,.danger-link,.edit-link,.copy-link,.editing-banner,.autosave-banner,.modal,.footer-note.no-print{
+        display:none !important;
+      }
+
+      .topbar{
+        padding:8px 10px !important;
+        box-shadow:none !important;
+        break-inside:avoid !important;
+        page-break-inside:avoid !important;
+      }
+
+      .topbar h1{
+        font-size:18px !important;
+        margin:0 !important;
+      }
+
+      .topbar p{
+        font-size:10px !important;
+        margin:3px 0 0 !important;
+      }
+
+      .container{
+        width:100% !important;
+        max-width:none !important;
+        margin:0 !important;
+        padding:0 !important;
+      }
+
+      .grid{
+        display:block !important;
+      }
+
+      .card{
+        width:100% !important;
+        max-width:none !important;
+        box-shadow:none !important;
+        border:1px solid #cbd5e1 !important;
+        border-radius:8px !important;
+        padding:8px !important;
+        margin:0 0 8px 0 !important;
+        break-inside:avoid-page !important;
+        page-break-inside:avoid !important;
+      }
+
+      .card h2{
+        font-size:15px !important;
+        margin:0 0 6px !important;
+        padding-bottom:5px !important;
+      }
+
+      .section-note{
+        font-size:9px !important;
+        margin:0 0 6px !important;
+      }
+
+      .form-grid{
+        display:grid !important;
+        grid-template-columns:repeat(12,1fr) !important;
+        gap:6px !important;
+      }
+
+      .field.col-6{grid-column:span 6 !important;}
+      .field.col-4{grid-column:span 4 !important;}
+      .field.col-3{grid-column:span 3 !important;}
+      .field.col-8{grid-column:span 8 !important;}
+      .field.col-2{grid-column:span 2 !important;}
+      .field.col-12,.field{grid-column:span 12 !important;}
+
+      label{
+        font-size:9px !important;
+        margin-bottom:2px !important;
+      }
+
+      input, select, textarea{
+        border:none !important;
+        padding:2px !important;
+        background:transparent !important;
+        min-height:auto !important;
+        font-size:10px !important;
+        line-height:1.2 !important;
+        resize:none !important;
+      }
+
+      textarea{
+        min-height:24px !important;
+        height:auto !important;
+      }
+
+      .table-wrap,.dashboard-table-wrap{
+        width:100% !important;
+        overflow:visible !important;
+        border-radius:0 !important;
+      }
+
+      table{
+        width:100% !important;
+        min-width:0 !important;
+        max-width:100% !important;
+        table-layout:fixed !important;
+        border-collapse:collapse !important;
+        margin-top:4px !important;
+        font-size:8.2px !important;
+      }
+
+      th,td{
+        padding:3px 3px !important;
+        font-size:8.2px !important;
+        line-height:1.18 !important;
+        vertical-align:top !important;
+        overflow-wrap:anywhere !important;
+        word-break:break-word !important;
+        white-space:normal !important;
+      }
+
+      th{
+        position:static !important;
+        background:#eef3f9 !important;
+        color:#173a63 !important;
+      }
+
+      tr{
+        break-inside:avoid !important;
+        page-break-inside:avoid !important;
+      }
+
+      #tablaApostamientos th:nth-child(1), #tablaApostamientos td:nth-child(1){width:9% !important;}
+      #tablaApostamientos th:nth-child(2), #tablaApostamientos td:nth-child(2){width:8% !important;}
+      #tablaApostamientos th:nth-child(3), #tablaApostamientos td:nth-child(3){width:7% !important;}
+      #tablaApostamientos th:nth-child(4), #tablaApostamientos td:nth-child(4){width:5% !important;}
+      #tablaApostamientos th:nth-child(5), #tablaApostamientos td:nth-child(5){width:5% !important;}
+      #tablaApostamientos th:nth-child(6), #tablaApostamientos td:nth-child(6){width:5% !important;}
+      #tablaApostamientos th:nth-child(7), #tablaApostamientos td:nth-child(7){width:7% !important;}
+      #tablaApostamientos th:nth-child(8), #tablaApostamientos td:nth-child(8){width:6% !important;}
+      #tablaApostamientos th:nth-child(9), #tablaApostamientos td:nth-child(9){width:7% !important;}
+      #tablaApostamientos th:nth-child(10), #tablaApostamientos td:nth-child(10){width:5% !important;}
+      #tablaApostamientos th:nth-child(11), #tablaApostamientos td:nth-child(11){width:18% !important;}
+      #tablaApostamientos th:nth-child(12), #tablaApostamientos td:nth-child(12){width:6% !important;}
+      #tablaApostamientos th:nth-child(13), #tablaApostamientos td:nth-child(13){width:6% !important;}
+
+      .stats{
+        display:grid !important;
+        grid-template-columns:repeat(5,1fr) !important;
+        gap:5px !important;
+      }
+
+      .stat{
+        padding:6px !important;
+        border-radius:8px !important;
+        box-shadow:none !important;
+      }
+
+      .stat h3{
+        font-size:8px !important;
+        margin:0 0 2px !important;
+      }
+
+      .stat .value{
+        font-size:14px !important;
+      }
+
+      .subcard{
+        padding:6px !important;
+        margin-top:6px !important;
+        break-inside:avoid-page !important;
+        page-break-inside:avoid !important;
+      }
+
+      .subcard h3{
+        font-size:12px !important;
+        margin:0 0 5px !important;
+      }
+
+      .summary-box,.decision-box{
+        font-size:9px !important;
+        line-height:1.3 !important;
+        padding:6px !important;
+        border-radius:8px !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <h1>Plataforma de Análisis de Apostamientos y Funciones</h1>
+    <p>Captura apostamientos por turno, guarda plantas, importa respaldos y continúa editando después</p>
+  </div>
+
+  <div class="container">
+    <div class="toolbar no-print">
+      <div class="menu-dropdown">
+        <button type="button" class="btn-primary menu-toggle" onclick="toggleMenuAcciones(event)">
+          <span class="menu-icon">☰</span>
+          <span>Menú de acciones</span>
+        </button>
+
+        <div id="menuAcciones" class="menu-panel">
+          <div class="menu-group-title">Respaldo y archivos</div>
+          <button class="menu-item" onclick="cerrarMenuAcciones(); guardarDatos();">💾 Guardar localmente</button>
+          <button class="menu-item" onclick="cerrarMenuAcciones(); cargarDatosManual();">📂 Cargar borrador actual</button>
+          <button class="menu-item" onclick="cerrarMenuAcciones(); document.getElementById('pdfLoader').click();">📄 Cargar PDF anterior</button>
+          <button class="menu-item" onclick="cerrarMenuAcciones(); exportarJSON();">⬇ Exportar JSON</button>
+          <button class="menu-item" onclick="cerrarMenuAcciones(); exportarExcel();">📗 Exportar Excel</button>
+          <button class="menu-item" onclick="cerrarMenuAcciones(); document.getElementById('jsonLoader').click();">⬆ Importar JSON</button>
+          <button class="menu-item" onclick="cerrarMenuAcciones(); document.getElementById('jsonFusionLoader').click();">🔀 Fusionar información</button>
+
+          <div class="menu-divider"></div>
+
+          <div class="menu-group-title">Análisis</div>
+          <button class="menu-item" onclick="cerrarMenuAcciones(); imprimirReporteCompleto();">🖨 Imprimir / Guardar PDF</button>
+          <button class="menu-item" onclick="cerrarMenuAcciones(); generarRadiografiaGeneral();">📊 Generar radiografía general</button>
+<button class="menu-item" onclick="cerrarMenuAcciones(); generarDashboardEjecutivo();">📈 Generar dashboard ejecutivo</button>
+          <button class="menu-item" onclick="cerrarMenuAcciones(); abrirModalPlantas();">🏭 Ver plantas guardadas</button>
+
+          <div class="menu-divider"></div>
+
+          <div class="menu-group-title">Mantenimiento</div>
+          <button class="menu-item danger-text" onclick="cerrarMenuAcciones(); limpiarTodo();">🗑 Limpiar todo</button>
+        </div>
+      </div>
+
+      <input type="file" id="pdfLoader" accept="application/pdf" style="display:none" onchange="importarPDF(event)" />
+      <input type="file" id="jsonLoader" accept=".json,application/json" style="display:none" onchange="importarJSON(event)" />
+      <input type="file" id="jsonFusionLoader" accept=".json,application/json" style="display:none" onchange="importarJSONFusionando(event)" />
+    </div>
+
+    <div id="autosaveBanner" class="autosave-banner no-print">
+      Estado del respaldo: listo.
+    </div>
+
+    <div class="grid">
+      <section class="card">
+        <h2>1. Datos generales de la planta</h2>
+        <div class="form-grid">
+          <div class="field col-6">
+            <label>Cliente / Servicio</label>
+            <select id="clienteServicio" title="También puedes usar el botón para escribir manualmente el nombre de la planta"></select>
+            <div class="no-print" style="margin-top:8px;">
+              <button type="button" class="btn-secondary btn-small" onclick="mostrarCampoPlantaManual()">Escribir planta manualmente</button>
+            </div>
+            <input type="text" id="clienteServicioManual" placeholder="Escribe manualmente el nombre de la planta" style="display:none; margin-top:8px;" />
+            <div class="footer-note no-print" style="margin-top:6px;">En celular usa este botón para capturar manualmente el nombre de la planta.</div>
+          </div>
+
+          <div class="field col-3">
+            <label>Fecha</label>
+            <input type="date" id="fecha" />
+          </div>
+
+          <div class="field col-3">
+            <label>Analista responsable</label>
+            <input type="text" id="analista" placeholder="Nombre del analista" />
+          </div>
+
+          <div class="field col-6">
+            <label>Ubicación general</label>
+            <input type="text" id="ubicacionGeneral" placeholder="Ej. Querétaro, Toluca, Celaya..." />
+          </div>
+
+          <div class="field col-6">
+            <label>Observaciones generales de la planta</label>
+            <textarea id="observacionesGenerales" placeholder="Condiciones generales del servicio, vulnerabilidades, hallazgos, etc."></textarea>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>2. Captura de apostamiento</h2>
+        <div id="editingBanner" class="editing-banner">Estás editando un apostamiento guardado.</div>
+        <p class="section-note">Captura cada apostamiento por turno. Ejemplo: Caseta 1 - Primer turno / Caseta 1 - Segundo turno.</p>
+
+        <div class="form-grid">
+          <div class="field col-4">
+            <label>Nombre del apostamiento</label>
+            <input type="text" id="ap_nombre" placeholder="Ej. Caseta 1" />
+          </div>
+
+          <div class="field col-4">
+            <label>Turno analizado</label>
+            <select id="ap_turnoAnalizado">
+              <option value="">Seleccionar</option>
+              <option>Primer turno</option>
+              <option>Segundo turno</option>
+              <option>Tercer turno</option>
+              <option>Nocturno</option>
+              <option>Mixto</option>
+            </select>
+          </div>
+
+          <div class="field col-4">
+            <label>Ubicación específica</label>
+            <input type="text" id="ap_ubicacion" placeholder="Ej. Acceso principal, perímetro norte" />
+          </div>
+
+          <div class="field col-4">
+            <label>Tipo de puesto</label>
+            <select id="ap_tipoPuesto">
+              <option value="">Seleccionar</option>
+              <option>Fijo</option>
+              <option>Móvil</option>
+              <option>Mixto</option>
+            </select>
+          </div>
+
+          <div class="field col-2">
+            <label>Riesgo que cubre</label>
+            <select id="ap_riesgo" onchange="calcularTiemposApostamiento()">
+              <option value="">Seleccionar</option>
+              <option>Crítico</option>
+              <option>Medio</option>
+              <option>Bajo</option>
+            </select>
+          </div>
+
+          <div class="field col-2">
+            <label>Número de elementos</label>
+            <input type="number" id="ap_elementos" min="1" value="1" oninput="calcularTiemposApostamiento()" />
+          </div>
+
+          <div class="field col-2">
+            <label>Turno base (horas)</label>
+            <input type="number" id="ap_horasTurno" min="1" value="12" oninput="calcularTiemposApostamiento()" />
+          </div>
+
+          <div class="field col-2">
+            <label>¿Requiere relevo?</label>
+            <select id="ap_relevo">
+              <option value="">Seleccionar</option>
+              <option>Sí</option>
+              <option>No</option>
+            </select>
+          </div>
+
+          <div class="field col-12">
+            <label>Objetivo del apostamiento</label>
+            <textarea id="ap_objetivo" placeholder="Describe por qué existe este puesto"></textarea>
+          </div>
+
+          <div class="field col-4">
+            <label>Perfil requerido</label>
+            <select id="ap_perfilSelect" onchange="actualizarPerfilDescripcion()">
+              <option value="">Seleccionar</option>
+              <option value="A">Experiencia (A)</option>
+              <option value="B">Experiencia (B)</option>
+              <option value="C">Experiencia (C)</option>
+            </select>
+          </div>
+
+          <div class="field col-8">
+            <label>Descripción del perfil requerido</label>
+            <textarea id="ap_perfilDescripcion" class="readonly-box" readonly placeholder="Aquí aparecerá automáticamente la descripción del perfil seleccionado"></textarea>
+          </div>
+
+          <div class="field col-3">
+            <label>Horario del turno</label>
+            <input type="text" id="ap_turnoNombre" placeholder="Ej. 06:00 a 18:00" />
+          </div>
+
+          <div class="field col-3">
+            <label>Días laborados</label>
+            <input type="text" id="ap_diasLaborados" placeholder="Ej. Lunes a sábado" />
+          </div>
+
+          <div class="field col-3">
+            <label>Días de descanso</label>
+            <input type="text" id="ap_diasDescanso" placeholder="Ej. Domingo" />
+          </div>
+
+          <div class="field col-3">
+            <label>¿Rotación?</label>
+            <select id="ap_rotacion">
+              <option value="">Seleccionar</option>
+              <option>Sí</option>
+              <option>No</option>
+            </select>
+          </div>
+
+          <div class="field col-6">
+            <label>Horarios pico de carga operativa</label>
+            <textarea id="ap_horariosPico" placeholder="Ej. 6:30-8:30, 13:00-14:00, 17:00-19:00"></textarea>
+          </div>
+
+          <div class="field col-6">
+            <label>Observaciones de turnos</label>
+            <textarea id="ap_turnosObs" placeholder="Necesidad de relevo, fatiga, traslape, etc."></textarea>
+          </div>
+
+          <div class="field col-12">
+            <label>Recomendaciones del apostamiento</label>
+            <textarea id="ap_recomendaciones" placeholder="Ej. Se recomienda implementar CCTV, lector de acceso, botón de pánico, control digital de visitantes, aumentar a 2 elementos en horario pico, etc."></textarea>
+          </div>
+        </div>
+
+        <div class="subcard">
+          <h3>Funciones del apostamiento</h3>
+          <div class="actions-inline no-print">
+            <button class="btn-secondary" onclick="agregarFilaFuncion()">Agregar función</button>
+          </div>
+          <div class="small-note">Evitar duplicar tiempos cuando la función y el formato correspondan al mismo acto operativo-documental.</div>
+
+          <div class="table-wrap">
+            <table id="tablaFunciones">
+              <thead>
+                <tr>
+                  <th style="width:14%">Función / Actividad</th>
+                  <th style="width:10%">Frecuencia</th>
+                  <th style="width:8%">Tiempo por evento (min)</th>
+                  <th style="width:8%">Eventos por turno</th>
+                  <th style="width:8%">Tiempo total (min)</th>
+                  <th style="width:8%">Criticidad</th>
+                  <th style="width:8%">¿Duplicada?</th>
+                  <th style="width:10%">¿Actualmente se realiza con apoyo tecnológico?</th>
+                  <th style="width:12%">Tecnología recomendada</th>
+                  <th style="width:10%">Observaciones</th>
+                  <th class="no-print" style="width:6%">Acción</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="subcard">
+          <h3>Formatos utilizados</h3>
+          <div class="actions-inline no-print">
+            <button class="btn-secondary" onclick="agregarFilaFormato()">Agregar formato</button>
+          </div>
+          <div class="small-note">Registrar aquí solo la carga documental adicional. No repetir tiempos si el formato ya está incluido dentro de la función.</div>
+
+          <div class="table-wrap">
+            <table id="tablaFormatos">
+              <thead>
+                <tr>
+                  <th style="width:24%">Formato</th>
+                  <th style="width:14%">Frecuencia</th>
+                  <th style="width:14%">Tiempo de llenado (min)</th>
+                  <th style="width:14%">Veces por turno</th>
+                  <th style="width:14%">Obligatorio</th>
+                  <th style="width:14%">¿Duplicado?</th>
+                  <th class="no-print" style="width:6%">Acción</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="subcard">
+          <h3>Indicadores del apostamiento</h3>
+          <div class="stats">
+            <div class="stat">
+              <h3>Min disponibles</h3>
+              <div class="value" id="statDisponibles">720</div>
+            </div>
+            <div class="stat">
+              <h3>Min activos</h3>
+              <div class="value" id="statActivos">0</div>
+            </div>
+            <div class="stat">
+              <h3>Min de inactividad</h3>
+              <div class="value" id="statInactivos">720</div>
+            </div>
+            <div class="stat">
+              <h3>% activo</h3>
+              <div class="value" id="statAprovechamiento">0%</div>
+            </div>
+            <div class="stat">
+              <h3>Diagnóstico operativo</h3>
+              <div><span id="nivelEtiqueta" class="pill pill-warn">Pendiente</span></div>
+            </div>
+          </div>
+          <div id="decisionBox" class="decision-box">Aún no hay recomendación automática para este apostamiento.</div>
+          <div class="footer-note">Clasificación automática: rojo = bajo, amarillo = intermedio, verde = adecuado.</div>
+        </div>
+
+        <div class="actions-inline no-print" style="margin-top:14px;">
+          <button id="btnGuardarApostamiento" class="btn-primary" onclick="guardarOActualizarApostamiento()">Agregar apostamiento a la planta</button>
+          <button class="btn-secondary" onclick="cancelarEdicion()">Limpiar captura actual</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>3. Apostamientos capturados en la planta</h2>
+        <p class="section-note">Cada fila es un apostamiento por turno ya guardado dentro del análisis general de esa planta.</p>
+
+        <div class="dash-controls no-print" style="margin-top:12px;">
+          <div class="field" style="max-width:320px;">
+            <label for="filtroTablaTurno">Filtrar apostamientos por turno</label>
+            <select id="filtroTablaTurno" onchange="renderTablaApostamientos()">
+              <option value="__TODOS__">Todos los turnos</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table id="tablaApostamientos">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Turno analizado</th>
+                <th>Ubicación</th>
+                <th>Tipo</th>
+                <th>Riesgo</th>
+                <th>Elementos</th>
+                <th>Horario</th>
+                <th>Min activos</th>
+                <th>Min de inactividad</th>
+                <th>% activo</th>
+                <th>Decisión sugerida</th>
+                <th>Total funciones</th>
+                <th>Total formatos</th>
+                <th class="no-print">Acción</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>4. Consolidado general de la planta</h2>
+        <div class="stats">
+          <div class="stat">
+            <h3>Total apostamientos</h3>
+            <div class="value" id="gen_totalApostamientos">0</div>
+          </div>
+          <div class="stat">
+            <h3>Total elementos</h3>
+            <div class="value" id="gen_totalElementos">0</div>
+          </div>
+          <div class="stat">
+            <h3>Puestos críticos</h3>
+            <div class="value" id="gen_puestosCriticos">0</div>
+          </div>
+          <div class="stat">
+            <h3>Promedio % activo</h3>
+            <div class="value" id="gen_promedioActivo">0%</div>
+          </div>
+          <div class="stat">
+            <h3>Total min inactivos</h3>
+            <div class="value" id="gen_totalInactivos">0</div>
+          </div>
+          <div class="stat">
+            <h3>Horas de inactividad</h3>
+            <div class="value" id="gen_horasInactivas">0 h</div>
+          </div>
+          <div class="stat">
+            <h3>Turnos equivalentes</h3>
+            <div class="value" id="gen_turnosEquivalentes">0</div>
+          </div>
+          <div class="stat">
+            <h3>Guardias equivalentes</h3>
+            <div class="value" id="gen_guardiasEquivalentes">0</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>5. Radiografía general automática de la planta</h2>
+        <div id="radiografiaGeneral" class="summary-box">Aún no se ha generado la radiografía general.</div>
+      </section>
+    </div>
+  </div>
+
+
+  <div id="modalDashboard" class="modal no-print">
+    <div class="modal-card" style="max-width:1100px;">
+      <div class="modal-header">
+        <h3>Dashboard ejecutivo</h3>
+        <button class="ghost" onclick="cerrarModalDashboard()">Cerrar</button>
+      </div>
+      <div id="dashboardContenido" style="padding:16px;"></div>
+    </div>
+  </div>
+
+  <div id="modalPlantas" class="modal no-print">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Plantas guardadas localmente</h3>
+        <button class="btn-danger" onclick="cerrarModalPlantas()">Cerrar</button>
+      </div>
+      <div id="listaPlantasGuardadas"></div>
+    </div>
+  </div>
+
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js;
+
+    const DRAFT_KEY = "radiografia_bosch_draft_v13";
+    const PLANTS_LIBRARY_KEY = "radiografia_bosch_plantas_library_v13";
+
+    const apostamientosCapturados = [];
+    let editingIndex = null;
+    let autosaveTimer = null;
+    let autosaveSilentTimer = null;
+    let currentLoadedPlantKey = null;
+    let currentLoadedVersionId = null;
+    let dashboardNivelFiltro = '__TODOS__';
+
+    const tecnologiasImplementables = [
+      "Sistema de autorización de acceso",
+      "Control de acceso biométrico",
+      "Bitácora digital",
+      "Rondines digitales",
+      "Control de visitantes",
+      "Revisión 18 puntos",
+      "CCTV",
+      "Monitoreo remoto",
+      "Lector QR",
+      "Registro digital de proveedores",
+      "Registro digital de contratistas",
+      "Check list digital",
+      "Reporte digital de incidencias",
+      "Botón de pánico",
+      "Evidencia fotográfica digital",
+      "Radio comunicación digital"
+    ];
+
+    const perfilesExperiencia = {
+      A: "Guardias con experiencia avanzada y conocimientos especializados. Han trabajado en la industria de la seguridad durante 3 o 5 años. Conocimiento: Revisión de contenedores, detección de paquetes sospechosos, comunicación efectiva, manejo de extintores, control de áreas críticas, tecnología de seguridad, respuesta a emergencia, prevención de amenazas y llamadas de extorsión, servicio al cliente.",
+      B: "Guardias con experiencia intermedia. Han adquirido habilidades y conocimientos básicos en seguridad y pueden tener 1 o 2 años de experiencia laboral relevante. Conocimiento: Recorridos inteligentes, control de accesos y vigilancia, registrar y reportar, llenado de formatería, detección de personas sospechosas, llamadas de extorsión, atención al cliente.",
+      C: "Guardias con poca experiencia o principiantes en la industria de la seguridad. Deben haber completado el curso de inducción, básico de formación de seguridad. Conocimiento: Control básico de accesos, reglamento interno de seguridad, reporte de incidentes, llenado de formatería, prevención de pérdidas."
+    };
+
+    const plantasBosch = [
+      "BOSCH TOLUCA ALMACEN",
+      "BOSCH TOLUCA",
+      "BOSCH SMO ALMACEN",
+      "BOSCH SANTA FE",
+      "BOSCH SAN LUIS POTOSI",
+      "BOSCH QUERETARO SATELITE EL MARQUEZ",
+      "BOSCH QUERETARO REXROTH NVA. UBICACION",
+      "BOSCH QUERETARO REXROTH",
+      "BOSCH QUERETARO",
+      "BOSCH PLANTA 4",
+      "BOSCH PLANTA 3",
+      "BOSCH PLANTA 1",
+      "BOSCH MONTERREY REXROTH",
+      "BOSCH MEXICALI",
+      "BOSCH GUADALAJARA",
+      "BOSCH GTO SATELITE",
+      "BOSCH DCMX-SMO",
+      "BOSCH CELAYA PLANTA",
+      "BOSCH CELAYA ALMACEN",
+      "BOSCH AGUASCALIENTES",
+      "ALMACEN EXTERNO 2 (Toluca)"
+    ];
+
+    function toggleMenuAcciones(event) {
+      event.stopPropagation();
+      const menu = document.getElementById("menuAcciones");
+      menu.classList.toggle("show");
+    }
+
+    function cerrarMenuAcciones() {
+      document.getElementById("menuAcciones").classList.remove("show");
+    }
+
+    document.addEventListener("click", function(e) {
+      const menu = document.getElementById("menuAcciones");
+      const dropdown = document.querySelector(".menu-dropdown");
+      if (!dropdown.contains(e.target)) {
+        menu.classList.remove("show");
+      }
+    });
+
+    function cargarPlantasEnSelect() {
+      const select = document.getElementById("clienteServicio");
+      select.innerHTML = '<option value="">Seleccionar planta</option>';
+      plantasBosch.forEach(planta => {
+        const opt = document.createElement("option");
+        opt.value = planta;
+        opt.textContent = planta;
+        select.appendChild(opt);
+      });
+      prepararCampoPlantaEditable();
+    }
+
+    function mostrarCampoPlantaManual() {
+      const select = document.getElementById("clienteServicio");
+      const inputManual = document.getElementById("clienteServicioManual");
+      if (!select || !inputManual) return;
+
+      inputManual.style.display = "block";
+      inputManual.value = select.value || inputManual.value || "";
+      inputManual.focus();
+      inputManual.select();
+    }
+
+    function prepararCampoPlantaEditable() {
+      const select = document.getElementById("clienteServicio");
+      const inputManual = document.getElementById("clienteServicioManual");
+      if (!select || !inputManual || select.dataset.editableReady === "1") return;
+
+      select.dataset.editableReady = "1";
+
+      select.addEventListener("dblclick", function() {
+        mostrarCampoPlantaManual();
+      });
+
+      inputManual.addEventListener("input", function() {
+        programarAutoguardado();
+      });
+
+      inputManual.addEventListener("change", function() {
+        const valor = inputManual.value.trim();
+        if (valor) {
+          if (!plantasBosch.includes(valor)) {
+            plantasBosch.unshift(valor);
+          }
+          recargarOpcionesPlanta(valor);
+        }
+        programarAutoguardado();
+      });
+
+      inputManual.addEventListener("keydown", function(e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          inputManual.blur();
+        }
+        if (e.key === "Escape") {
+          inputManual.value = "";
+          inputManual.style.display = "none";
+          programarAutoguardado();
+        }
+      });
+
+      select.addEventListener("change", function() {
+        if (select.value) {
+          inputManual.value = "";
+          inputManual.style.display = "none";
+        }
+        programarAutoguardado();
+      });
+    }
+
+    function recargarOpcionesPlanta(valorSeleccionado = "") {
+      const select = document.getElementById("clienteServicio");
+      const opcionesUnicas = [...new Set(plantasBosch.filter(Boolean))].sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" }));
+      select.innerHTML = '<option value="">Seleccionar planta</option>';
+      opcionesUnicas.forEach(planta => {
+        const opt = document.createElement("option");
+        opt.value = planta;
+        opt.textContent = planta;
+        select.appendChild(opt);
+      });
+      if (valorSeleccionado) {
+        select.value = valorSeleccionado;
+      }
+    }
+
+    function actualizarPerfilDescripcion() {
+      const perfil = document.getElementById("ap_perfilSelect").value;
+      document.getElementById("ap_perfilDescripcion").value = perfilesExperiencia[perfil] || "";
+      programarAutoguardado();
+    }
+
+    function crearInput(type = "text", placeholder = "", value = "") {
+      const input = document.createElement("input");
+      input.type = type;
+      input.placeholder = placeholder;
+      input.value = value;
+      input.oninput = () => {
+        calcularTiemposApostamiento();
+        programarAutoguardado();
+      };
+      input.onchange = programarAutoguardado;
+      return input;
+    }
+
+    function crearSelect(opciones = [], value = "") {
+      const select = document.createElement("select");
+      const vacio = document.createElement("option");
+      vacio.value = "";
+      vacio.textContent = "Seleccionar";
+      select.appendChild(vacio);
+
+      opciones.forEach(op => {
+        const option = document.createElement("option");
+        option.value = op;
+        option.textContent = op;
+        if (op === value) option.selected = true;
+        select.appendChild(option);
+      });
+
+      select.onchange = () => {
+        calcularTiemposApostamiento();
+        programarAutoguardado();
+      };
+      return select;
+    }
+
+    function crearTextarea(placeholder = "", value = "") {
+      const ta = document.createElement("textarea");
+      ta.placeholder = placeholder;
+      ta.value = value;
+      ta.style.minHeight = "60px";
+      ta.oninput = () => {
+        calcularTiemposApostamiento();
+        programarAutoguardado();
+      };
+      ta.onchange = programarAutoguardado;
+      return ta;
+    }
+
+    function agregarFilaFuncion(data = {}) {
+      const tbody = document.querySelector("#tablaFunciones tbody");
+      const tr = document.createElement("tr");
+
+      const td1 = document.createElement("td");
+      td1.appendChild(crearInput("text", "Ej. Registro de accesos", data.funcion || ""));
+
+      const td2 = document.createElement("td");
+      td2.appendChild(crearInput("text", "Ej. Cada hora", data.frecuencia || ""));
+
+      const td3 = document.createElement("td");
+      td3.appendChild(crearInput("number", "0", data.tiempoEvento || ""));
+
+      const td4 = document.createElement("td");
+      td4.appendChild(crearInput("number", "0", data.eventosTurno || ""));
+
+      const td5 = document.createElement("td");
+      const total = crearInput("number", "", data.tiempoTotal || "");
+      total.readOnly = true;
+      td5.appendChild(total);
+
+      const td6 = document.createElement("td");
+      td6.appendChild(crearSelect(["Crítica","Media","Baja"], data.criticidad || ""));
+
+      const td7 = document.createElement("td");
+      td7.appendChild(crearSelect(["Sí","No"], data.duplicada || ""));
+
+      const td8 = document.createElement("td");
+      td8.appendChild(crearSelect(["Sí","No"], data.tecnologia || ""));
+
+      const td9 = document.createElement("td");
+      td9.appendChild(crearSelect(tecnologiasImplementables, data.tecnologiaImplementable || ""));
+
+      const td10 = document.createElement("td");
+      td10.appendChild(crearTextarea("Observaciones", data.observaciones || ""));
+
+      const td11 = document.createElement("td");
+      td11.className = "no-print";
+      const del = document.createElement("span");
+      del.className = "danger-link";
+      del.textContent = "Eliminar";
+      del.onclick = () => {
+        if (!confirmarEliminacion("¿Seguro que deseas eliminar esta función?")) return;
+        tr.remove();
+        calcularTiemposApostamiento();
+        programarAutoguardado();
+      };
+      td11.appendChild(del);
+
+      tr.append(td1, td2, td3, td4, td5, td6, td7, td8, td9, td10, td11);
+      tbody.appendChild(tr);
+
+      calcularTiemposApostamiento();
+      programarAutoguardado();
+    }
+
+    function agregarFilaFormato(data = {}) {
+      const tbody = document.querySelector("#tablaFormatos tbody");
+      const tr = document.createElement("tr");
+
+      const td1 = document.createElement("td");
+      td1.appendChild(crearInput("text", "Ej. Bitácora", data.nombre || ""));
+
+      const td2 = document.createElement("td");
+      td2.appendChild(crearInput("text", "Ej. Diario", data.frecuencia || ""));
+
+      const td3 = document.createElement("td");
+      td3.appendChild(crearInput("number", "0", data.tiempoLlenado || ""));
+
+      const td4 = document.createElement("td");
+      td4.appendChild(crearInput("number", "0", data.vecesTurno || ""));
+
+      const td5 = document.createElement("td");
+      td5.appendChild(crearSelect(["Sí","No"], data.obligatorio || ""));
+
+      const td6 = document.createElement("td");
+      td6.appendChild(crearSelect(["Sí","No"], data.duplicado || ""));
+
+      const td7 = document.createElement("td");
+      td7.className = "no-print";
+      const del = document.createElement("span");
+      del.className = "danger-link";
+      del.textContent = "Eliminar";
+      del.onclick = () => {
+        if (!confirmarEliminacion("¿Seguro que deseas eliminar este formato?")) return;
+        tr.remove();
+        calcularTiemposApostamiento();
+        programarAutoguardado();
+      };
+      td7.appendChild(del);
+
+      tr.append(td1, td2, td3, td4, td5, td6, td7);
+      tbody.appendChild(tr);
+
+      calcularTiemposApostamiento();
+      programarAutoguardado();
+    }
+
+    function obtenerFuncionesActuales() {
+      return [...document.querySelectorAll("#tablaFunciones tbody tr")].map(tr => {
+        const c = tr.querySelectorAll("input, select, textarea");
+        return {
+          funcion: c[0].value,
+          frecuencia: c[1].value,
+          tiempoEvento: c[2].value,
+          eventosTurno: c[3].value,
+          tiempoTotal: c[4].value,
+          criticidad: c[5].value,
+          duplicada: c[6].value,
+          tecnologia: c[7].value,
+          tecnologiaImplementable: c[8].value,
+          observaciones: c[9].value
+        };
+      });
+    }
+
+    function obtenerFormatosActuales() {
+      return [...document.querySelectorAll("#tablaFormatos tbody tr")].map(tr => {
+        const c = tr.querySelectorAll("input, select");
+        return {
+          nombre: c[0].value,
+          frecuencia: c[1].value,
+          tiempoLlenado: c[2].value,
+          vecesTurno: c[3].value,
+          obligatorio: c[4].value,
+          duplicado: c[5].value
+        };
+      });
+    }
+
+    function obtenerTecnologiasRecomendadas(funciones) {
+      const set = new Set();
+      funciones.forEach(f => {
+        if (f.tecnologiaImplementable) set.add(f.tecnologiaImplementable);
+      });
+      return [...set];
+    }
+
+    function obtenerDecisionSugerida(porcentajeActivo, riesgo, tecnologias, elementos) {
+      if (porcentajeActivo < 50 && riesgo !== "Crítico") {
+        if (tecnologias.length > 0) return "Optimizar con tecnología / revisar reducción";
+        return "Revisar rediseño o fusión";
+      }
+      if (porcentajeActivo < 50 && riesgo === "Crítico") {
+        if (tecnologias.length > 0) return "Mantener y reforzar con tecnología";
+        return "Mantener por criticidad / revisar cobertura";
+      }
+      if (porcentajeActivo >= 50 && porcentajeActivo < 80) {
+        if (tecnologias.length > 0) return "Mejora operativa con tecnología";
+        return "Mantener con ajustes";
+      }
+      if (porcentajeActivo >= 80) {
+        if (elementos <= 1) return "Posible necesidad de refuerzo";
+        return "Operación exigente / monitorear saturación";
+      }
+      return "Sin definir";
+    }
+
+    function calcularTiemposApostamiento() {
+      const filasFunciones = obtenerFuncionesActuales();
+      const filasFormatos = obtenerFormatosActuales();
+
+      const trsFunciones = [...document.querySelectorAll("#tablaFunciones tbody tr")];
+      trsFunciones.forEach(tr => {
+        const inputs = tr.querySelectorAll("input, select, textarea");
+        const tiempoEvento = parseFloat(inputs[2].value) || 0;
+        const eventosTurno = parseFloat(inputs[3].value) || 0;
+        const total = tiempoEvento * eventosTurno;
+        inputs[4].value = total;
+      });
+
+      let tiempoActivo = 0;
+
+      filasFunciones.forEach(f => {
+        tiempoActivo += (parseFloat(f.tiempoEvento) || 0) * (parseFloat(f.eventosTurno) || 0);
+      });
+
+      filasFormatos.forEach(f => {
+        tiempoActivo += (parseFloat(f.tiempoLlenado) || 0) * (parseFloat(f.vecesTurno) || 0);
+      });
+
+      const horasTurno = parseFloat(document.getElementById("ap_horasTurno").value) || 0;
+      const elementos = parseFloat(document.getElementById("ap_elementos").value) || 0;
+
+      const disponibles = horasTurno * 60 * elementos;
+      const inactivos = Math.max(disponibles - tiempoActivo, 0);
+      const porcentajeActivo = disponibles > 0 ? (tiempoActivo / disponibles) * 100 : 0;
+
+      document.getElementById("statDisponibles").textContent = disponibles.toFixed(0);
+      document.getElementById("statActivos").textContent = tiempoActivo.toFixed(0);
+      document.getElementById("statInactivos").textContent = inactivos.toFixed(0);
+      document.getElementById("statAprovechamiento").textContent = porcentajeActivo.toFixed(1) + "%";
+
+      const etiqueta = document.getElementById("nivelEtiqueta");
+      etiqueta.className = "pill";
+
+      if (porcentajeActivo >= 80) {
+        etiqueta.classList.add("pill-ok");
+        etiqueta.textContent = "Aprovechamiento operativo adecuado";
+      } else if (porcentajeActivo >= 50) {
+        etiqueta.classList.add("pill-warn");
+        etiqueta.textContent = "Aprovechamiento operativo intermedio";
+      } else {
+        etiqueta.classList.add("pill-danger");
+        etiqueta.textContent = "Aprovechamiento operativo bajo";
+      }
+
+      const tecnologias = obtenerTecnologiasRecomendadas(filasFunciones);
+      const decision = obtenerDecisionSugerida(
+        porcentajeActivo,
+        document.getElementById("ap_riesgo").value,
+        tecnologias,
+        elementos
+      );
+
+      document.getElementById("decisionBox").textContent =
+        `Decisión sugerida: ${decision}. Tecnologías detectadas para implementación: ${tecnologias.length ? tecnologias.join(", ") : "Ninguna seleccionada"}.`;
+
+      return {
+        disponibles,
+        tiempoActivo,
+        inactivos,
+        porcentajeActivo,
+        decision,
+        tecnologias
+      };
+    }
+
+    function construirApostamientoDesdeFormulario() {
+      const indicadores = calcularTiemposApostamiento();
+      return {
+        nombre: val("ap_nombre"),
+        turnoAnalizado: val("ap_turnoAnalizado"),
+        ubicacion: val("ap_ubicacion"),
+        tipoPuesto: val("ap_tipoPuesto"),
+        riesgo: val("ap_riesgo"),
+        elementos: parseInt(val("ap_elementos")) || 0,
+        horasTurno: parseFloat(val("ap_horasTurno")) || 0,
+        relevo: val("ap_relevo"),
+        objetivo: val("ap_objetivo"),
+        perfilClave: val("ap_perfilSelect"),
+        perfilDescripcion: val("ap_perfilDescripcion"),
+        turnoNombre: val("ap_turnoNombre"),
+        diasLaborados: val("ap_diasLaborados"),
+        diasDescanso: val("ap_diasDescanso"),
+        rotacion: val("ap_rotacion"),
+        horariosPico: val("ap_horariosPico"),
+        turnosObs: val("ap_turnosObs"),
+        recomendaciones: val("ap_recomendaciones"),
+        funciones: obtenerFuncionesActuales(),
+        formatos: obtenerFormatosActuales(),
+        tecnologiasRecomendadas: indicadores.tecnologias,
+        decisionSugerida: indicadores.decision,
+        minDisponibles: indicadores.disponibles,
+        minActivos: indicadores.tiempoActivo,
+        minInactivos: indicadores.inactivos,
+        porcentajeActivo: indicadores.porcentajeActivo
+      };
+    }
+
+    function obtenerBorradorActual() {
+      return {
+        editingIndex,
+        capturaActual: construirApostamientoDesdeFormulario()
+      };
+    }
+
+    function obtenerSnapshotCompleto() {
+      return {
+        planta: val("clienteServicio"),
+        fecha: val("fecha"),
+        analista: val("analista"),
+        ubicacionGeneral: val("ubicacionGeneral"),
+        observacionesGenerales: val("observacionesGenerales"),
+        apostamientosCapturados: JSON.parse(JSON.stringify(apostamientosCapturados)),
+        radiografiaGeneral: document.getElementById("radiografiaGeneral").textContent,
+        borrador: obtenerBorradorActual(),
+        currentLoadedPlantKey,
+        currentLoadedVersionId,
+        updatedAt: new Date().toISOString()
+      };
+    }
+
+    function generarVersionId() {
+      return "ver_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
+    }
+
+    function obtenerFechaHoraLegible(fechaIso) {
+      if (!fechaIso) return "Sin fecha";
+      try {
+        return new Date(fechaIso).toLocaleString();
+      } catch {
+        return fechaIso;
+      }
+    }
+
+    function obtenerBibliotecaNormalizada() {
+      let biblioteca;
+      try {
+        biblioteca = JSON.parse(localStorage.getItem(PLANTS_LIBRARY_KEY)) || {};
+      } catch {
+        biblioteca = {};
+      }
+
+      const normalizada = {};
+
+      Object.keys(biblioteca).forEach(key => {
+        const item = biblioteca[key];
+
+        if (item && Array.isArray(item.versions)) {
+          normalizada[key] = item;
+        } else {
+          normalizada[key] = {
+            plantName: key,
+            versions: [
+              {
+                versionId: generarVersionId(),
+                savedAt: item?.updatedAt || new Date().toISOString(),
+                snapshot: item || {}
+              }
+            ]
+          };
+        }
+      });
+
+      return normalizada;
+    }
+
+    function guardarBibliotecaNormalizada(biblioteca) {
+      localStorage.setItem(PLANTS_LIBRARY_KEY, JSON.stringify(biblioteca));
+    }
+
+    function guardarBorradorAutomatico(silencioso = true) {
+      try {
+        const data = obtenerSnapshotCompleto();
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(data));
+        actualizarEstadoAutosave("Respaldo automático guardado correctamente.", false);
+        if (!silencioso) alert("Respaldo local actualizado correctamente.");
+      } catch (error) {
+        actualizarEstadoAutosave("No se pudo guardar el respaldo automático.", true);
+      }
+    }
+
+    function programarAutoguardado() {
+      actualizarEstadoAutosave("Guardando cambios automáticamente...", false);
+
+      clearTimeout(autosaveTimer);
+      autosaveTimer = setTimeout(() => {
+        guardarBorradorAutomatico(true);
+      }, 1200);
+    }
+
+    function actualizarEstadoAutosave(texto, esError = false) {
+      const banner = document.getElementById("autosaveBanner");
+      banner.textContent = "Estado del respaldo: " + texto;
+      banner.style.background = esError ? "#fef2f2" : "#f0fdf4";
+      banner.style.borderColor = esError ? "#fecaca" : "#bbf7d0";
+      banner.style.color = esError ? "#991b1b" : "#166534";
+
+      clearTimeout(autosaveSilentTimer);
+      autosaveSilentTimer = setTimeout(() => {
+        banner.textContent = "Estado del respaldo: listo.";
+        banner.style.background = "#f0fdf4";
+        banner.style.borderColor = "#bbf7d0";
+        banner.style.color = "#166534";
+      }, 2500);
+    }
+
+    function guardarOActualizarApostamiento() {
+      const nombre = val("ap_nombre").trim();
+      if (!nombre) {
+        alert("Debes capturar al menos el nombre del apostamiento.");
+        return;
+      }
+
+      const planta = val("clienteServicio").trim();
+      if (!planta) {
+        alert("Primero selecciona la planta en Cliente / Servicio.");
+        return;
+      }
+
+      const turnoAnalizado = val("ap_turnoAnalizado").trim();
+      if (!turnoAnalizado) {
+        alert("Debes seleccionar el turno analizado.");
+        return;
+      }
+
+      const apostamiento = construirApostamientoDesdeFormulario();
+
+      if (editingIndex === null) {
+        apostamientosCapturados.push(apostamiento);
+        alert("Apostamiento agregado correctamente.");
+      } else {
+        apostamientosCapturados[editingIndex] = apostamiento;
+        alert("Apostamiento actualizado correctamente.");
+      }
+
+      renderTablaApostamientos();
+      actualizarConsolidado();
+      cancelarEdicion(false);
+      guardarBorradorAutomatico(true);
+    }
+
+    function editarApostamiento(index) {
+      const ap = apostamientosCapturados[index];
+      editingIndex = index;
+
+      cargarApostamientoEnFormulario(ap);
+
+      document.getElementById("editingBanner").style.display = "block";
+      document.getElementById("btnGuardarApostamiento").textContent = "Actualizar apostamiento";
+      calcularTiemposApostamiento();
+      programarAutoguardado();
+      window.scrollTo({ top: document.querySelector(".card:nth-of-type(2)").offsetTop - 20, behavior: "smooth" });
+    }
+
+    function duplicarApostamiento(index) {
+      const original = apostamientosCapturados[index];
+      const copia = JSON.parse(JSON.stringify(original));
+
+      if (copia.turnoAnalizado === "Primer turno") {
+        copia.turnoAnalizado = "Segundo turno";
+      } else if (copia.turnoAnalizado === "Segundo turno") {
+        copia.turnoAnalizado = "Primer turno";
+      }
+
+      copia.nombre = original.nombre;
+
+      apostamientosCapturados.push(copia);
+      renderTablaApostamientos();
+      actualizarConsolidado();
+      guardarBorradorAutomatico(true);
+      alert("Apostamiento duplicado correctamente. Ya puedes editar la copia.");
+    }
+
+    function cargarApostamientoEnFormulario(ap) {
+      setVal("ap_nombre", ap.nombre || "");
+      setVal("ap_turnoAnalizado", ap.turnoAnalizado || "");
+      setVal("ap_ubicacion", ap.ubicacion || "");
+      setVal("ap_tipoPuesto", ap.tipoPuesto || "");
+      setVal("ap_riesgo", ap.riesgo || "");
+      setVal("ap_elementos", ap.elementos || 1);
+      setVal("ap_horasTurno", ap.horasTurno || 12);
+      setVal("ap_relevo", ap.relevo || "");
+      setVal("ap_objetivo", ap.objetivo || "");
+      setVal("ap_perfilSelect", ap.perfilClave || "");
+      actualizarPerfilDescripcion();
+      setVal("ap_perfilDescripcion", ap.perfilDescripcion || "");
+      setVal("ap_turnoNombre", ap.turnoNombre || "");
+      setVal("ap_diasLaborados", ap.diasLaborados || "");
+      setVal("ap_diasDescanso", ap.diasDescanso || "");
+      setVal("ap_rotacion", ap.rotacion || "");
+      setVal("ap_horariosPico", ap.horariosPico || "");
+      setVal("ap_turnosObs", ap.turnosObs || "");
+      setVal("ap_recomendaciones", ap.recomendaciones || "");
+
+      document.querySelector("#tablaFunciones tbody").innerHTML = "";
+      document.querySelector("#tablaFormatos tbody").innerHTML = "";
+
+      (ap.funciones || []).forEach(f => agregarFilaFuncion(f));
+      (ap.formatos || []).forEach(f => agregarFilaFormato(f));
+
+      if ((ap.funciones || []).length === 0) agregarFilaFuncion();
+      if ((ap.formatos || []).length === 0) agregarFilaFormato();
+
+      calcularTiemposApostamiento();
+    }
+
+    function cancelarEdicion(showAlert = false) {
+      editingIndex = null;
+      document.getElementById("editingBanner").style.display = "none";
+      document.getElementById("btnGuardarApostamiento").textContent = "Agregar apostamiento a la planta";
+      limpiarCapturaApostamiento();
+      if (showAlert) alert("Edición cancelada.");
+    }
+
+    function renderFiltroTablaTurnos() {
+      const select = document.getElementById("filtroTablaTurno");
+      if (!select) return;
+      const actual = select.value || "__TODOS__";
+      const turnos = [...new Set(apostamientosCapturados.map(ap => String(ap.turnoAnalizado || "").trim()).filter(Boolean))];
+      select.innerHTML = `<option value="__TODOS__">Todos los turnos</option>${turnos.map(turno => `<option value="${escapeHtml(turno)}">${escapeHtml(turno)}</option>`).join("")}`;
+      if (turnos.includes(actual)) {
+        select.value = actual;
+      } else {
+        select.value = "__TODOS__";
+      }
+    }
+
+    function renderTablaApostamientos() {
+      renderFiltroTablaTurnos();
+      const tbody = document.querySelector("#tablaApostamientos tbody");
+      const filtroTurno = document.getElementById("filtroTablaTurno") ? document.getElementById("filtroTablaTurno").value : "__TODOS__";
+      tbody.innerHTML = "";
+
+      apostamientosCapturados.forEach((ap, index) => {
+        const turnoActual = String(ap.turnoAnalizado || "").trim();
+        if (filtroTurno !== "__TODOS__" && turnoActual !== filtroTurno) return;
+        if (!coincideNivelDashboard(ap, dashboardNivelFiltro)) return;
+
+        const apVista = obtenerApostamientoAjustadoDashboard(ap);
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${escapeHtml(ap.nombre)}</td>
+          <td>${escapeHtml(ap.turnoAnalizado || "")}</td>
+          <td>${escapeHtml(ap.ubicacion || "")}</td>
+          <td>${escapeHtml(ap.tipoPuesto || "")}</td>
+          <td>${escapeHtml(ap.riesgo || "")}</td>
+          <td>${ap.elementos}</td>
+          <td>${escapeHtml(ap.turnoNombre || "")}</td>
+          <td>${(apVista.minActivos || 0).toFixed(0)}</td>
+          <td>${(apVista.minInactivos || 0).toFixed(0)}</td>
+          <td>${(apVista.porcentajeActivo || 0).toFixed(1)}%</td>
+          <td>${escapeHtml(ap.decisionSugerida || "")}</td>
+          <td>${(ap.funciones || []).length}</td>
+          <td>${(ap.formatos || []).length}</td>
+          <td class="no-print">
+            <span class="edit-link" onclick="editarApostamiento(${index})">Editar</span>
+            <span class="copy-link" onclick="duplicarApostamiento(${index})">Duplicar</span>
+            <span class="danger-link" onclick="eliminarApostamiento(${index})">Eliminar</span>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      if (!tbody.children.length) {
+        const tr = document.createElement("tr");
+        const txtVacio = dashboardNivelFiltro === '__TODOS__' ? 'No hay apostamientos para el turno seleccionado.' : `No hay apostamientos para el turno y nivel ${dashboardNivelFiltro} seleccionado.`;
+        tr.innerHTML = `<td colspan="14" style="text-align:center;color:#64748b;">${txtVacio}</td>`;
+        tbody.appendChild(tr);
+      }
+    }
+
+    function confirmarEliminacion(mensaje = "¿Seguro que deseas eliminar este registro?") {
+      return confirm(mensaje);
+    }
+
+    function eliminarApostamiento(index) {
+      if (!confirmarEliminacion("¿Seguro que deseas eliminar este apostamiento?")) return;
+      apostamientosCapturados.splice(index, 1);
+      if (editingIndex === index) cancelarEdicion(false);
+      if (editingIndex !== null && index < editingIndex) editingIndex--;
+      renderTablaApostamientos();
+      actualizarConsolidado();
+      guardarBorradorAutomatico(true);
+    }
+
+    function actualizarConsolidado() {
+      const r = calcularResumenAjustado(apostamientosCapturados);
+      document.getElementById("gen_totalApostamientos").textContent = r.totalApostamientos;
+      document.getElementById("gen_totalElementos").textContent = r.totalElementos;
+      document.getElementById("gen_puestosCriticos").textContent = r.puestosCriticos;
+      document.getElementById("gen_promedioActivo").textContent = r.promedioActivo.toFixed(1) + "%";
+      document.getElementById("gen_totalInactivos").textContent = r.totalInactivos.toFixed(0);
+      const horasEl = document.getElementById("gen_horasInactivas");
+      const turnosEl = document.getElementById("gen_turnosEquivalentes");
+      const guardiasEl = document.getElementById("gen_guardiasEquivalentes");
+      if (horasEl) horasEl.textContent = r.horasInactividad.toFixed(1) + " h";
+      if (turnosEl) turnosEl.textContent = r.turnosEquivalentes.toFixed(2);
+      if (guardiasEl) guardiasEl.textContent = r.guardiasEquivalentes.toFixed(2);
+    }
+
+    function generarRadiografiaGeneral() {
+      actualizarConsolidado();
+
+      const planta = val("clienteServicio") || "No especificada";
+      const fecha = val("fecha") || "No especificada";
+      const analista = val("analista") || "No especificado";
+      const ubicacion = val("ubicacionGeneral") || "No especificada";
+      const obsGenerales = val("observacionesGenerales") || "Sin observaciones generales";
+
+      // La radiografía usa la misma fuente de verdad que dashboard, tabla y consolidado.
+      const resumenAjustado = calcularResumenAjustado(apostamientosCapturados);
+      const apostamientosReporte = resumenAjustado.datos;
+      const totalApostamientos = resumenAjustado.totalApostamientos;
+      const totalElementos = resumenAjustado.totalElementos;
+      const puestosCriticos = resumenAjustado.puestosCriticos;
+      const totalDisponibles = resumenAjustado.totalDisponibles;
+      const totalInactivos = resumenAjustado.totalInactivos;
+      const totalActivos = resumenAjustado.totalActivos;
+      const horasInactividad = resumenAjustado.horasInactividad;
+      const turnosEquivalentes = resumenAjustado.turnosEquivalentes;
+      const guardiasEquivalentes = resumenAjustado.guardiasEquivalentes;
+      const promedioActivo = resumenAjustado.promedioActivo;
+
+      const apostamientosBajoAprovechamiento = apostamientosReporte
+        .filter(a => a.porcentajeActivo < 50)
+        .map(a => `${a.nombre} - ${a.turnoAnalizado}`);
+
+      const apostamientosAltos = apostamientosReporte
+        .filter(a => a.porcentajeActivo >= 80)
+        .map(a => `${a.nombre} - ${a.turnoAnalizado}`);
+
+      const tecnologiasGlobales = [...new Set(
+        apostamientosReporte.flatMap(a => a.tecnologiasRecomendadas || [])
+      )];
+
+      const diagnosticoGeneral = obtenerDiagnosticoUnificado(promedioActivo);
+
+      const detalleTurnos = apostamientosReporte.map((a, i) => {
+        const funcionesTecnologia = (a.funciones || []).filter(f => f.tecnologia === "Sí").length;
+        const funcionesSinTecnologia = (a.funciones || []).filter(f => f.tecnologia === "No").length;
+
+        return `${i + 1}. ${a.nombre} - ${a.turnoAnalizado || "Turno no especificado"}
+- Ubicación: ${a.ubicacion || "No especificada"}
+- Riesgo: ${a.riesgo || "No especificado"}
+- Elementos: ${a.elementos || 0}
+- Perfil requerido: ${a.perfilClave ? "Experiencia (" + a.perfilClave + ")" : "No especificado"}
+- Horario del turno: ${a.turnoNombre || "No especificado"}
+- Días laborados: ${a.diasLaborados || "No especificado"}
+- Días de descanso: ${a.diasDescanso || "No especificado"}
+- Rotación: ${a.rotacion || "No especificado"}
+- Horarios pico: ${a.horariosPico || "No especificado"}
+- Observaciones de turnos: ${a.turnosObs || "Sin observaciones"}
+- Recomendaciones: ${a.recomendaciones || "Sin recomendaciones"}
+- Decisión sugerida: ${a.decisionSugerida || "Sin definir"}
+- Min disponibles operativos: ${(a.minDisponibles || 0).toFixed(0)}
+- Min activos operativos: ${(a.minActivos || 0).toFixed(0)}
+- Min de inactividad operativa: ${(a.minInactivos || 0).toFixed(0)}
+- % activo operativo: ${(a.porcentajeActivo || 0).toFixed(1)}%
+- Funciones con apoyo tecnológico actual: ${funcionesTecnologia}
+- Funciones sin apoyo tecnológico actual: ${funcionesSinTecnologia}
+- Tecnología recomendada detectada: ${(a.tecnologiasRecomendadas && a.tecnologiasRecomendadas.length) ? a.tecnologiasRecomendadas.join(", ") : "No detectada"}`;
+      }).join("\n\n");
+
+      const texto = `
+PLANTA / SERVICIO: ${planta}
+UBICACIÓN GENERAL: ${ubicacion}
+FECHA DEL ANÁLISIS: ${fecha}
+ANALISTA RESPONSABLE: ${analista}
+
+RESUMEN GENERAL:
+- Total de apostamientos analizados: ${totalApostamientos}
+- Total de elementos requeridos / analizados: ${totalElementos}
+- Puestos clasificados como críticos: ${puestosCriticos}
+- Tiempo disponible operativo ajustado: ${totalDisponibles.toFixed(0)} min
+- Tiempo activo operativo acumulado: ${totalActivos.toFixed(0)} min
+- Tiempo de inactividad operativa acumulada: ${totalInactivos.toFixed(0)} min
+- Horas de inactividad equivalentes: ${horasInactividad.toFixed(1)} h
+- Turnos equivalentes de 12 h: ${turnosEquivalentes.toFixed(2)}
+- Guardias equivalentes a 60 h semanales: ${guardiasEquivalentes.toFixed(2)}
+- Promedio general de actividad operativa: ${promedioActivo.toFixed(1)}%
+
+DIAGNÓSTICO GENERAL:
+${diagnosticoGeneral}
+
+APOSTAMIENTOS CON BAJO APROVECHAMIENTO (<50%):
+${apostamientosBajoAprovechamiento.length ? apostamientosBajoAprovechamiento.join(", ") : "No se detectaron"}
+
+APOSTAMIENTOS CON ALTA OCUPACIÓN (>=80%):
+${apostamientosAltos.length ? apostamientosAltos.join(", ") : "No se detectaron"}
+
+TECNOLOGÍA RECOMENDADA DETECTADA EN LA PLANTA:
+${tecnologiasGlobales.length ? tecnologiasGlobales.join(", ") : "No se detectó tecnología propuesta"}
+
+OBSERVACIONES GENERALES DE LA PLANTA:
+${obsGenerales}
+
+DETALLE DE TURNOS Y COBERTURA POR APOSTAMIENTO:
+${detalleTurnos || "Sin detalle de turnos capturado"}
+
+RECOMENDACIÓN GENERAL:
+Se recomienda tomar decisiones por apostamiento y por turno, no en conjunto. Priorizar primero los puestos críticos, después los turnos saturados y finalmente los turnos con alto tiempo de inactividad. Integrar tecnología donde el proceso sea repetitivo, documental o de control.
+      `.trim();
+
+      document.getElementById("radiografiaGeneral").textContent = texto;
+      programarAutoguardado();
+    }
+
+    function limpiarCapturaApostamiento() {
+      [
+        "ap_nombre","ap_turnoAnalizado","ap_ubicacion","ap_tipoPuesto","ap_riesgo","ap_relevo","ap_objetivo",
+        "ap_turnoNombre","ap_diasLaborados","ap_diasDescanso","ap_rotacion",
+        "ap_horariosPico","ap_turnosObs","ap_recomendaciones"
+      ].forEach(id => {
+        document.getElementById(id).value = "";
+      });
+
+      document.getElementById("ap_elementos").value = 1;
+      document.getElementById("ap_horasTurno").value = 12;
+      document.getElementById("ap_perfilSelect").value = "";
+      document.getElementById("ap_perfilDescripcion").value = "";
+      document.getElementById("decisionBox").textContent = "Aún no hay recomendación automática para este apostamiento.";
+
+      document.querySelector("#tablaFunciones tbody").innerHTML = "";
+      document.querySelector("#tablaFormatos tbody").innerHTML = "";
+
+      agregarFilaFuncion();
+      agregarFilaFormato();
+      calcularTiemposApostamiento();
+    }
+
+    function guardarDatos() {
+      const plantaSeleccionada = val("clienteServicio").trim();
+      if (!plantaSeleccionada) {
+        alert("Selecciona primero una planta antes de guardar localmente.");
+        return;
+      }
+
+      const snapshot = obtenerSnapshotCompleto();
+      const biblioteca = obtenerBibliotecaNormalizada();
+
+      if (!biblioteca[plantaSeleccionada]) {
+        biblioteca[plantaSeleccionada] = {
+          plantName: plantaSeleccionada,
+          versions: []
+        };
+      }
+
+      const nuevaVersion = {
+        versionId: generarVersionId(),
+        savedAt: new Date().toISOString(),
+        snapshot: {
+          ...snapshot,
+          planta: plantaSeleccionada,
+          currentLoadedPlantKey: plantaSeleccionada
+        }
+      };
+
+      biblioteca[plantaSeleccionada].versions.unshift(nuevaVersion);
+
+      guardarBibliotecaNormalizada(biblioteca);
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(nuevaVersion.snapshot));
+
+      currentLoadedPlantKey = plantaSeleccionada;
+      currentLoadedVersionId = nuevaVersion.versionId;
+
+      actualizarEstadoAutosave("Guardado local completo realizado.", false);
+      alert("Se guardó una nueva versión de la planta: " + plantaSeleccionada);
+      renderListaPlantasGuardadas();
+    }
+
+    function cargarDatosManual() {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (!raw) {
+        alert("No hay respaldo local guardado.");
+        return;
+      }
+
+      const data = JSON.parse(raw);
+      aplicarSnapshotCompleto(data);
+      alert("Respaldo local cargado correctamente.");
+    }
+
+    function aplicarSnapshotCompleto(data) {
+      setVal("clienteServicio", data.planta || "");
+      setVal("fecha", data.fecha || "");
+      setVal("analista", data.analista || "");
+      setVal("ubicacionGeneral", data.ubicacionGeneral || "");
+      setVal("observacionesGenerales", data.observacionesGenerales || "");
+      currentLoadedPlantKey = data.currentLoadedPlantKey || data.planta || null;
+      currentLoadedVersionId = data.currentLoadedVersionId || null;
+
+      apostamientosCapturados.length = 0;
+      (data.apostamientosCapturados || []).forEach(a => apostamientosCapturados.push(a));
+
+      renderTablaApostamientos();
+      actualizarConsolidado();
+
+      document.getElementById("radiografiaGeneral").textContent =
+        data.radiografiaGeneral || "Aún no se ha generado la radiografía general.";
+
+      const borrador = data.borrador || {};
+      editingIndex = borrador.editingIndex ?? null;
+
+      if (borrador.capturaActual) {
+        cargarApostamientoEnFormulario(borrador.capturaActual);
+      } else {
+        limpiarCapturaApostamiento();
+      }
+
+      if (editingIndex !== null) {
+        document.getElementById("editingBanner").style.display = "block";
+        document.getElementById("btnGuardarApostamiento").textContent = "Actualizar apostamiento";
+      } else {
+        document.getElementById("editingBanner").style.display = "none";
+        document.getElementById("btnGuardarApostamiento").textContent = "Agregar apostamiento a la planta";
+      }
+
+      calcularTiemposApostamiento();
+    }
+
+    function restaurarBorradorAutomaticoAlInicio() {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (!raw) return;
+
+      try {
+        const data = JSON.parse(raw);
+        aplicarSnapshotCompleto(data);
+        actualizarEstadoAutosave("Se restauró el respaldo automático anterior.", false);
+      } catch (error) {
+        console.error("No se pudo restaurar el borrador automático", error);
+      }
+    }
+
+    function limpiarTodo() {
+      if (!confirmarEliminacion("¿Seguro que deseas limpiar la app actual? Esto no borrará las plantas guardadas en la biblioteca.")) return;
+
+      setVal("clienteServicio", "");
+      setVal("fecha", "");
+      setVal("analista", "");
+      setVal("ubicacionGeneral", "");
+      setVal("observacionesGenerales", "");
+
+      apostamientosCapturados.length = 0;
+      renderTablaApostamientos();
+      actualizarConsolidado();
+
+      document.getElementById("radiografiaGeneral").textContent =
+        "Aún no se ha generado la radiografía general.";
+
+      currentLoadedPlantKey = null;
+      currentLoadedVersionId = null;
+      cancelarEdicion(false);
+      localStorage.removeItem(DRAFT_KEY);
+      actualizarEstadoAutosave("Se limpió la captura actual.", false);
+    }
+
+    function abrirModalPlantas() {
+      renderListaPlantasGuardadas();
+      document.getElementById("modalPlantas").classList.add("show");
+    }
+
+    function cerrarModalPlantas() {
+      document.getElementById("modalPlantas").classList.remove("show");
+    }
+
+    function togglePlantVersions(nombreCodificado) {
+      const panel = document.getElementById("versions_" + nombreCodificado);
+      if (!panel) return;
+      panel.style.display = panel.style.display === "none" ? "block" : "none";
+    }
+
+    function renderListaPlantasGuardadas() {
+      const contenedor = document.getElementById("listaPlantasGuardadas");
+      const biblioteca = obtenerBibliotecaNormalizada();
+      const nombres = Object.keys(biblioteca).sort((a, b) => a.localeCompare(b));
+
+      if (nombres.length === 0) {
+        contenedor.innerHTML = `<div class="empty-state">No hay plantas guardadas todavía.</div>`;
+        return;
+      }
+
+      contenedor.innerHTML = nombres.map(nombre => {
+        const grupo = biblioteca[nombre];
+        const versions = grupo.versions || [];
+        const totalVersiones = versions.length;
+        const ultima = versions[0];
+        const totalApostamientos = ultima?.snapshot?.apostamientosCapturados?.length || 0;
+
+        const versionHtml = versions.map((ver, index) => {
+          const snap = ver.snapshot || {};
+          const totalAps = snap.apostamientosCapturados?.length || 0;
+
+          return `
+            <div class="plant-item" style="margin-top:10px; background:#ffffff;">
+              <div class="plant-meta">
+                <strong>Versión ${totalVersiones - index}</strong><br>
+                Guardado: ${escapeHtml(obtenerFechaHoraLegible(ver.savedAt))}<br>
+                Fecha análisis: ${escapeHtml(snap.fecha || "No especificada")}<br>
+                Analista: ${escapeHtml(snap.analista || "No especificado")}<br>
+                Apostamientos: ${totalAps}
+              </div>
+              <div class="actions-inline">
+                <button class="btn-primary" onclick="cargarVersionGuardada('${encodeURIComponent(nombre)}','${encodeURIComponent(ver.versionId)}')">Cargar versión</button>
+                <button class="btn-secondary" onclick="renombrarGrupoPlanta('${encodeURIComponent(nombre)}')">Renombrar planta</button>
+                <button class="btn-success" onclick="duplicarVersionGuardada('${encodeURIComponent(nombre)}','${encodeURIComponent(ver.versionId)}')">Duplicar versión</button>
+                <button class="btn-danger" onclick="eliminarVersionGuardada('${encodeURIComponent(nombre)}','${encodeURIComponent(ver.versionId)}')">Eliminar versión</button>
+              </div>
+            </div>
+          `;
+        }).join("");
+
+        return `
+          <div class="plant-item">
+            <div class="toggle-title" onclick="togglePlantVersions('${encodeURIComponent(nombre)}')">
+              <h4>${escapeHtml(nombre)}</h4>
+              <span class="toggle-badge">${totalVersiones} versión(es)</span>
+            </div>
+            <div class="plant-meta">
+              Apostamientos en la versión más reciente: ${totalApostamientos}<br>
+              Último guardado: ${escapeHtml(obtenerFechaHoraLegible(ultima?.savedAt))}
+            </div>
+            <div id="versions_${encodeURIComponent(nombre)}" class="version-panel">
+              ${versionHtml}
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function cargarVersionGuardada(nombreCodificado, versionIdCodificado) {
+      const nombre = decodeURIComponent(nombreCodificado);
+      const versionId = decodeURIComponent(versionIdCodificado);
+
+      const biblioteca = obtenerBibliotecaNormalizada();
+      const grupo = biblioteca[nombre];
+      if (!grupo) {
+        alert("No se encontró la planta.");
+        return;
+      }
+
+      const version = (grupo.versions || []).find(v => v.versionId === versionId);
+      if (!version) {
+        alert("No se encontró la versión.");
+        return;
+      }
+
+      aplicarSnapshotCompleto({
+        ...version.snapshot,
+        currentLoadedPlantKey: nombre,
+        currentLoadedVersionId: versionId
+      });
+
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({
+        ...version.snapshot,
+        currentLoadedPlantKey: nombre,
+        currentLoadedVersionId: versionId
+      }));
+
+      currentLoadedPlantKey = nombre;
+      currentLoadedVersionId = versionId;
+      cerrarModalPlantas();
+      alert("Versión cargada correctamente. Ya puedes editarla.");
+    }
+
+    function eliminarVersionGuardada(nombreCodificado, versionIdCodificado) {
+      const nombre = decodeURIComponent(nombreCodificado);
+      const versionId = decodeURIComponent(versionIdCodificado);
+
+      if (!confirmarEliminacion("¿Seguro que deseas eliminar esta versión guardada?")) return;
+
+      const biblioteca = obtenerBibliotecaNormalizada();
+      const grupo = biblioteca[nombre];
+      if (!grupo) return;
+
+      grupo.versions = (grupo.versions || []).filter(v => v.versionId !== versionId);
+
+      if (grupo.versions.length === 0) {
+        delete biblioteca[nombre];
+      }
+
+      guardarBibliotecaNormalizada(biblioteca);
+
+      if (currentLoadedVersionId === versionId) {
+        currentLoadedVersionId = null;
+      }
+
+      renderListaPlantasGuardadas();
+      alert("Versión eliminada correctamente.");
+    }
+
+    function duplicarVersionGuardada(nombreCodificado, versionIdCodificado) {
+      const nombre = decodeURIComponent(nombreCodificado);
+      const versionId = decodeURIComponent(versionIdCodificado);
+
+      const biblioteca = obtenerBibliotecaNormalizada();
+      const grupo = biblioteca[nombre];
+      if (!grupo) return;
+
+      const version = (grupo.versions || []).find(v => v.versionId === versionId);
+      if (!version) return;
+
+      const copia = JSON.parse(JSON.stringify(version.snapshot));
+      copia.updatedAt = new Date().toISOString();
+      copia.currentLoadedPlantKey = nombre;
+      copia.currentLoadedVersionId = null;
+
+      grupo.versions.unshift({
+        versionId: generarVersionId(),
+        savedAt: new Date().toISOString(),
+        snapshot: copia
+      });
+
+      guardarBibliotecaNormalizada(biblioteca);
+      renderListaPlantasGuardadas();
+      alert("Versión duplicada correctamente.");
+    }
+
+    function renombrarGrupoPlanta(nombreCodificado) {
+      const nombreAnterior = decodeURIComponent(nombreCodificado);
+      const biblioteca = obtenerBibliotecaNormalizada();
+      const grupo = biblioteca[nombreAnterior];
+      if (!grupo) return;
+
+      const nuevoNombre = prompt("Nuevo nombre de la planta:", nombreAnterior);
+      if (!nuevoNombre) return;
+
+      const limpio = nuevoNombre.trim();
+      if (!limpio) {
+        alert("El nombre no puede quedar vacío.");
+        return;
+      }
+
+      if (biblioteca[limpio] && limpio !== nombreAnterior) {
+        alert("Ya existe otra planta con ese nombre.");
+        return;
+      }
+
+      grupo.plantName = limpio;
+      grupo.versions = (grupo.versions || []).map(v => {
+        if (v.snapshot) {
+          v.snapshot.planta = limpio;
+          v.snapshot.currentLoadedPlantKey = limpio;
+        }
+        return v;
+      });
+
+      biblioteca[limpio] = grupo;
+      delete biblioteca[nombreAnterior];
+
+      if (currentLoadedPlantKey === nombreAnterior) {
+        currentLoadedPlantKey = limpio;
+        setVal("clienteServicio", limpio);
+      }
+
+      guardarBibliotecaNormalizada(biblioteca);
+      renderListaPlantasGuardadas();
+      guardarBorradorAutomatico(true);
+      alert("La planta fue renombrada correctamente.");
+    }
+
+    async function importarPDF(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      try {
+        actualizarEstadoAutosave("Leyendo PDF...", false);
+
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+
+        let textoCompleto = "";
+
+        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+          const page = await pdf.getPage(pageNum);
+          const textContent = await page.getTextContent();
+          const pageText = textContent.items.map(item => item.str).join(" ");
+          textoCompleto += "\n" + pageText;
+        }
+
+        if (!textoCompleto.trim()) {
+          alert("No se pudo extraer texto del PDF. Si el archivo es escaneado como imagen, no se podrá llenar automáticamente.");
+          return;
+        }
+
+        const datosExtraidos = parsearPDFRadiografia(textoCompleto);
+
+        if (!datosExtraidos.planta && !datosExtraidos.apostamientos.length) {
+          const usarTextoCrudo = confirm(
+            "Se leyó el PDF, pero no se reconoció la estructura completa. ¿Deseas cargar el texto recuperado en observaciones/radiografía para no perderlo?"
+          );
+
+          if (usarTextoCrudo) {
+            aplicarTextoCrudoPDF(textoCompleto);
+            actualizarEstadoAutosave("PDF cargado parcialmente.", false);
+            alert("El PDF se cargó de forma parcial. Revisa los campos y acomoda lo necesario.");
+          } else {
+            console.log("Texto detectado en PDF:", textoCompleto);
+          }
+          return;
+        }
+
+        aplicarDatosImportadosDesdePDF(datosExtraidos);
+        actualizarEstadoAutosave("PDF cargado correctamente.", false);
+        alert("PDF importado correctamente. Revisa los campos y ajusta lo que falte.");
+
+      } catch (error) {
+        console.error("Error al importar PDF:", error);
+        actualizarEstadoAutosave("Error al leer el PDF.", true);
+        alert("No se pudo leer el PDF. Revisa que sea un PDF válido con texto seleccionable.");
+      } finally {
+        event.target.value = "";
+      }
+    }
+
+    function parsearPDFRadiografia(texto) {
+      const limpiar = (s) => (s || "").replace(/\s+/g, " ").trim();
+
+      const resultado = {
+        planta: extraerCampo(texto, /PLANTA\s*\/\s*SERVICIO:\s*(.*?)(?=UBICACIÓN GENERAL:|FECHA DEL ANÁLISIS:|ANALISTA RESPONSABLE:|RESUMEN GENERAL:)/is),
+        ubicacionGeneral: extraerCampo(texto, /UBICACIÓN GENERAL:\s*(.*?)(?=FECHA DEL ANÁLISIS:|ANALISTA RESPONSABLE:|RESUMEN GENERAL:)/is),
+        fecha: "",
+        analista: extraerCampo(texto, /ANALISTA RESPONSABLE:\s*(.*?)(?=RESUMEN GENERAL:|DIAGNÓSTICO GENERAL:)/is),
+        observacionesGenerales: extraerCampo(texto, /OBSERVACIONES GENERALES DE LA PLANTA:\s*(.*?)(?=DETALLE DE TURNOS Y COBERTURA POR APOSTAMIENTO:|RECOMENDACIÓN GENERAL:)/is),
+        radiografiaGeneral: limpiar(texto),
+        apostamientos: []
+      };
+
+      const fechaTexto = extraerCampo(texto, /FECHA DEL ANÁLISIS:\s*(.*?)(?=ANALISTA RESPONSABLE:|RESUMEN GENERAL:)/is);
+      resultado.fecha = convertirFechaDetectada(fechaTexto);
+
+      const detalleBloque = extraerCampo(
+        texto,
+        /DETALLE DE TURNOS Y COBERTURA POR APOSTAMIENTO:\s*(.*?)(?=RECOMENDACIÓN GENERAL:|$)/is
+      );
+
+      if (detalleBloque) {
+        const bloques = detalleBloque.split(/\s(?=\d+\.\s)/g);
+
+        bloques.forEach(bloque => {
+          const limpio = bloque.trim();
+          if (!limpio) return;
+
+          const encabezado = limpio.match(/^\d+\.\s*(.*?)\s*-\s*(Primer turno|Segundo turno|Tercer turno|Nocturno|Mixto|Turno no especificado)/i);
+
+          const nombre = encabezado ? limpiar(encabezado[1]) : extraerCampo(limpio, /^\d+\.\s*(.*?)(?=-\s*(Primer turno|Segundo turno|Tercer turno|Nocturno|Mixto|Turno no especificado))/is);
+          const turnoAnalizado = encabezado ? limpiar(encabezado[2]) : "";
+
+          const apostamiento = {
+            nombre: nombre || "",
+            turnoAnalizado: turnoAnalizado || "",
+            ubicacion: extraerCampo(limpio, /Ubicación:\s*(.*?)(?=-\s*Riesgo:|Riesgo:)/is),
+            riesgo: extraerCampo(limpio, /Riesgo:\s*(.*?)(?=Elementos:|Perfil requerido:|Horario del turno:)/is),
+            elementos: parseInt(extraerCampo(limpio, /Elementos:\s*(\d+)/i)) || 1,
+            perfilDescripcion: extraerCampo(limpio, /Perfil requerido:\s*(.*?)(?=Horario del turno:|Días laborados:)/is),
+            turnoNombre: extraerCampo(limpio, /Horario del turno:\s*(.*?)(?=Días laborados:|Días de descanso:)/is),
+            diasLaborados: extraerCampo(limpio, /Días laborados:\s*(.*?)(?=Días de descanso:|Rotación:)/is),
+            diasDescanso: extraerCampo(limpio, /Días de descanso:\s*(.*?)(?=Rotación:|Horarios pico:)/is),
+            rotacion: extraerCampo(limpio, /Rotación:\s*(.*?)(?=Horarios pico:|Observaciones de turnos:)/is),
+            horariosPico: extraerCampo(limpio, /Horarios pico:\s*(.*?)(?=Observaciones de turnos:|Recomendaciones:)/is),
+            turnosObs: extraerCampo(limpio, /Observaciones de turnos:\s*(.*?)(?=Recomendaciones:|Decisión sugerida:)/is),
+            recomendaciones: extraerCampo(limpio, /Recomendaciones:\s*(.*?)(?=Decisión sugerida:|Min disponibles operativos:)/is),
+            decisionSugerida: extraerCampo(limpio, /Decisión sugerida:\s*(.*?)(?=Min disponibles operativos:|Min activos:)/is),
+            minDisponibles: parseFloat(extraerCampo(limpio, /Min disponibles operativos:\s*([\d.]+)/i)) || 0,
+            minActivos: parseFloat(extraerCampo(limpio, /Min activos:\s*([\d.]+)/i)) || 0,
+            minInactivos: parseFloat(extraerCampo(limpio, /Min de inactividad:\s*([\d.]+)/i)) || 0,
+            porcentajeActivo: parseFloat(extraerCampo(limpio, /% activo:\s*([\d.]+)/i)) || 0,
+            tecnologiasRecomendadas: [],
+            funciones: [],
+            formatos: [],
+            tipoPuesto: "",
+            horasTurno: 12,
+            relevo: "",
+            objetivo: "",
+            perfilClave: detectarPerfilClave(extraerCampo(limpio, /Perfil requerido:\s*(.*?)(?=Horario del turno:|Días laborados:)/is))
+          };
+
+          const tecnologiasTexto = extraerCampo(limpio, /Tecnología recomendada detectada:\s*(.*)$/is);
+          if (tecnologiasTexto && !/No detectada/i.test(tecnologiasTexto)) {
+            apostamiento.tecnologiasRecomendadas = tecnologiasTexto
+              .split(",")
+              .map(t => t.trim())
+              .filter(Boolean);
+          }
+
+          if (apostamiento.nombre) {
+            resultado.apostamientos.push(apostamiento);
+          }
+        });
+      }
+
+      return resultado;
+    }
+
+    function aplicarDatosImportadosDesdePDF(data) {
+      if (data.planta) setVal("clienteServicio", data.planta);
+      if (data.fecha) setVal("fecha", data.fecha);
+      if (data.analista) setVal("analista", data.analista);
+      if (data.ubicacionGeneral) setVal("ubicacionGeneral", data.ubicacionGeneral);
+      if (data.observacionesGenerales) setVal("observacionesGenerales", data.observacionesGenerales);
+
+      apostamientosCapturados.length = 0;
+
+      (data.apostamientos || []).forEach(ap => {
+        apostamientosCapturados.push({
+          nombre: ap.nombre || "",
+          turnoAnalizado: ap.turnoAnalizado || "",
+          ubicacion: ap.ubicacion || "",
+          tipoPuesto: ap.tipoPuesto || "",
+          riesgo: ap.riesgo || "",
+          elementos: ap.elementos || 1,
+          horasTurno: ap.horasTurno || 12,
+          relevo: ap.relevo || "",
+          objetivo: ap.objetivo || "",
+          perfilClave: ap.perfilClave || "",
+          perfilDescripcion: ap.perfilDescripcion || "",
+          turnoNombre: ap.turnoNombre || "",
+          diasLaborados: ap.diasLaborados || "",
+          diasDescanso: ap.diasDescanso || "",
+          rotacion: ap.rotacion || "",
+          horariosPico: ap.horariosPico || "",
+          turnosObs: ap.turnosObs || "",
+          recomendaciones: ap.recomendaciones || "",
+          funciones: ap.funciones || [],
+          formatos: ap.formatos || [],
+          tecnologiasRecomendadas: ap.tecnologiasRecomendadas || [],
+          decisionSugerida: ap.decisionSugerida || "",
+          minDisponibles: ap.minDisponibles || 0,
+          minActivos: ap.minActivos || 0,
+          minInactivos: ap.minInactivos || 0,
+          porcentajeActivo: ap.porcentajeActivo || 0
+        });
+      });
+
+      currentLoadedPlantKey = data.planta || null;
+      currentLoadedVersionId = null;
+      renderTablaApostamientos();
+      actualizarConsolidado();
+
+      if (data.radiografiaGeneral) {
+        document.getElementById("radiografiaGeneral").textContent = data.radiografiaGeneral;
+      }
+
+      cancelarEdicion(false);
+      guardarBorradorAutomatico(true);
+    }
+
+    function aplicarTextoCrudoPDF(textoCompleto) {
+      const texto = (textoCompleto || "").replace(/\s+/g, " ").trim();
+
+      const plantaDetectada = plantasBosch.find(p => texto.toUpperCase().includes(p.toUpperCase()));
+      if (plantaDetectada) {
+        setVal("clienteServicio", plantaDetectada);
+      }
+
+      const fechaMatch = texto.match(/\b(\d{2})\/(\d{2})\/(\d{4})\b/);
+      if (fechaMatch) {
+        setVal("fecha", `${fechaMatch[3]}-${fechaMatch[2]}-${fechaMatch[1]}`);
+      }
+
+      const analistaMatch = texto.match(/analista(?: responsable)?[:\s]+([a-záéíóúñ\s]{4,60})/i);
+      if (analistaMatch) {
+        setVal("analista", analistaMatch[1].trim());
+      }
+
+      setVal("observacionesGenerales", texto.slice(0, 5000));
+      document.getElementById("radiografiaGeneral").textContent = texto;
+
+      apostamientosCapturados.length = 0;
+      renderTablaApostamientos();
+      actualizarConsolidado();
+      guardarBorradorAutomatico(true);
+    }
+
+
+    function exportarExcel() {
+      const snapshot = obtenerSnapshotCompleto();
+      const planta = snapshot.planta || "planta_sin_nombre";
+
+      const hojaGeneral = [
+        { Campo: "Planta / Servicio", Valor: snapshot.planta || "" },
+        { Campo: "Fecha", Valor: snapshot.fecha || "" },
+        { Campo: "Analista", Valor: snapshot.analista || "" },
+        { Campo: "Ubicación general", Valor: snapshot.ubicacionGeneral || "" },
+        { Campo: "Observaciones generales", Valor: snapshot.observacionesGenerales || "" },
+        { Campo: "Total de apostamientos", Valor: (snapshot.apostamientosCapturados || []).length },
+        { Campo: "Última actualización", Valor: snapshot.updatedAt || "" }
+      ];
+
+      const hojaApostamientos = (snapshot.apostamientosCapturados || []).map((ap, i) => ({
+        No: i + 1,
+        Nombre: ap.nombre || "",
+        "Turno analizado": ap.turnoAnalizado || "",
+        Ubicación: ap.ubicacion || "",
+        "Tipo de puesto": ap.tipoPuesto || "",
+        Riesgo: ap.riesgo || "",
+        Elementos: ap.elementos || 0,
+        "Horas turno": ap.horasTurno || 0,
+        Relevo: ap.relevo || "",
+        Objetivo: ap.objetivo || "",
+        "Perfil clave": ap.perfilClave || "",
+        "Descripción perfil": ap.perfilDescripcion || "",
+        Horario: ap.turnoNombre || "",
+        "Días laborados": ap.diasLaborados || "",
+        "Días descanso": ap.diasDescanso || "",
+        Rotación: ap.rotacion || "",
+        "Horarios pico": ap.horariosPico || "",
+        "Obs. turnos": ap.turnosObs || "",
+        Recomendaciones: ap.recomendaciones || "",
+        "Decisión sugerida": ap.decisionSugerida || "",
+        "Min disponibles": ap.minDisponibles || 0,
+        "Min activos": ap.minActivos || 0,
+        "Min de inactividad": ap.minInactivos || 0,
+        "% activo": ap.porcentajeActivo || 0
+      }));
+
+      const hojaFunciones = [];
+      const hojaFormatos = [];
+
+      (snapshot.apostamientosCapturados || []).forEach((ap, idx) => {
+        (ap.funciones || []).forEach((fn, j) => {
+          hojaFunciones.push({
+            Apostamiento: ap.nombre || `Apostamiento ${idx + 1}`,
+            "No. función": j + 1,
+            Función: fn.funcion || "",
+            Frecuencia: fn.frecuencia || "",
+            "Min / evento": fn.minPorEvento || "",
+            "Veces / turno": fn.vecesTurno || "",
+            "Total min": fn.totalMin || "",
+            Criticidad: fn.criticidad || "",
+            Duplicada: fn.duplicada || "",
+            Tecnología: fn.tecnologia || "",
+            "Tecnología implementable": fn.tecnologiaImplementable || "",
+            Observaciones: fn.observaciones || ""
+          });
+        });
+
+        (ap.formatos || []).forEach((fo, j) => {
+          hojaFormatos.push({
+            Apostamiento: ap.nombre || `Apostamiento ${idx + 1}`,
+            "No. formato": j + 1,
+            Nombre: fo.nombre || "",
+            Frecuencia: fo.frecuencia || "",
+            "Tiempo llenado": fo.tiempoLlenado || "",
+            "Veces turno": fo.vecesTurno || "",
+            Obligatorio: fo.obligatorio || "",
+            Duplicado: fo.duplicado || ""
+          });
+        });
+      });
+
+      const hojaRadiografia = [
+        { Seccion: "Radiografía general", Contenido: snapshot.radiografiaGeneral || "" }
+      ];
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(hojaGeneral), "General");
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(hojaApostamientos.length ? hojaApostamientos : [{ Mensaje: "Sin apostamientos capturados" }]), "Apostamientos");
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(hojaFunciones.length ? hojaFunciones : [{ Mensaje: "Sin funciones capturadas" }]), "Funciones");
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(hojaFormatos.length ? hojaFormatos : [{ Mensaje: "Sin formatos capturados" }]), "Formatos");
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(hojaRadiografia), "Radiografia");
+
+      const nombreArchivo = `analisis_${planta.replace(/[^a-z0-9]+/gi, "_").toLowerCase() || "planta"}.xlsx`;
+      XLSX.writeFile(wb, nombreArchivo);
+    }
+
+    function exportarJSON() {
+      const snapshot = obtenerSnapshotCompleto();
+      const planta = snapshot.planta || "planta_sin_nombre";
+      const nombreArchivo = `${planta.replace(/[\\/:*?"<>|]+/g, "_")}_respaldo.json`;
+
+      const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = nombreArchivo;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+
+      actualizarEstadoAutosave("JSON exportado correctamente.", false);
+    }
+
+    async function importarJSON(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+
+        if (!data || typeof data !== "object") {
+          throw new Error("JSON inválido");
+        }
+
+        aplicarSnapshotCompleto(data);
+        guardarBorradorAutomatico(true);
+        actualizarEstadoAutosave("JSON importado correctamente.", false);
+        alert("Respaldo JSON importado correctamente.");
+
+      } catch (error) {
+        console.error(error);
+        actualizarEstadoAutosave("No se pudo importar el JSON.", true);
+        alert("No se pudo importar el archivo JSON.");
+      } finally {
+        event.target.value = "";
+      }
+    }
+
+    function normalizarValorParaFirma(valor) {
+      if (Array.isArray(valor)) {
+        return valor.map(normalizarValorParaFirma);
+      }
+      if (valor && typeof valor === "object") {
+        const salida = {};
+        Object.keys(valor).sort().forEach(key => {
+          if (["updatedAt", "savedAt", "currentLoadedPlantKey", "currentLoadedVersionId"].includes(key)) return;
+          salida[key] = normalizarValorParaFirma(valor[key]);
+        });
+        return salida;
+      }
+      if (typeof valor === "string") {
+        return valor.trim();
+      }
+      return valor ?? "";
+    }
+
+    function normalizarTextoClave(valor) {
+      return String(valor || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .toLowerCase();
+    }
+
+    function normalizarNombrePlanta(valor) {
+      return normalizarTextoClave(valor);
+    }
+
+    function crearClaveApostamientoBasica(item) {
+      return [
+        normalizarTextoClave(item?.nombre),
+        normalizarTextoClave(item?.turnoAnalizado),
+        normalizarTextoClave(item?.ubicacion),
+        normalizarTextoClave(item?.tipoPuesto)
+      ].join("|");
+    }
+
+    function crearFirmaApostamiento(item) {
+      return JSON.stringify(normalizarValorParaFirma({
+        nombre: item?.nombre || "",
+        turnoAnalizado: item?.turnoAnalizado || "",
+        ubicacion: item?.ubicacion || "",
+        tipoPuesto: item?.tipoPuesto || "",
+        riesgo: item?.riesgo || "",
+        elementos: item?.elementos || 0,
+        horasTurno: item?.horasTurno || 0,
+        relevo: item?.relevo || "",
+        objetivo: item?.objetivo || "",
+        perfilClave: item?.perfilClave || "",
+        perfilDescripcion: item?.perfilDescripcion || "",
+        turnoNombre: item?.turnoNombre || "",
+        diasLaborados: item?.diasLaborados || "",
+        diasDescanso: item?.diasDescanso || "",
+        rotacion: item?.rotacion || "",
+        horariosPico: item?.horariosPico || "",
+        turnosObs: item?.turnosObs || "",
+        recomendaciones: item?.recomendaciones || "",
+        funciones: item?.funciones || [],
+        formatos: item?.formatos || [],
+        tecnologiasRecomendadas: item?.tecnologiasRecomendadas || [],
+        decisionSugerida: item?.decisionSugerida || "",
+        minDisponibles: item?.minDisponibles || 0,
+        minActivos: item?.minActivos || 0,
+        minInactivos: item?.minInactivos || 0,
+        porcentajeActivo: item?.porcentajeActivo || 0
+      }));
+    }
+
+    function crearFirmaSnapshot(snapshot, nombrePlanta) {
+      return JSON.stringify({
+        planta: normalizarNombrePlanta(snapshot?.planta || nombrePlanta),
+        fecha: snapshot?.fecha || "",
+        analista: normalizarTextoClave(snapshot?.analista || ""),
+        ubicacionGeneral: normalizarTextoClave(snapshot?.ubicacionGeneral || ""),
+        observacionesGenerales: normalizarTextoClave(snapshot?.observacionesGenerales || ""),
+        apostamientosCapturados: snapshot?.apostamientosCapturados || [],
+        radiografiaGeneral: normalizarTextoClave(snapshot?.radiografiaGeneral || "")
+      });
+    }
+
+    function fusionarListasApostamientos(listaBase, listaNueva) {
+      const resultado = Array.isArray(listaBase) ? JSON.parse(JSON.stringify(listaBase)) : [];
+      const clavesBasicas = new Map();
+      const firmas = new Set();
+      let agregados = 0;
+      let actualizados = 0;
+
+      resultado.forEach((item, index) => {
+        const clave = crearClaveApostamientoBasica(item);
+        const firma = crearFirmaApostamiento(item);
+        if (clave) clavesBasicas.set(clave, index);
+        firmas.add(firma);
+      });
+
+      (Array.isArray(listaNueva) ? listaNueva : []).forEach(item => {
+        const copia = JSON.parse(JSON.stringify(item || {}));
+        const clave = crearClaveApostamientoBasica(copia);
+        const firma = crearFirmaApostamiento(copia);
+
+        if (clave && clavesBasicas.has(clave)) {
+          const idxExistente = clavesBasicas.get(clave);
+          const existente = resultado[idxExistente];
+          const firmaExistente = crearFirmaApostamiento(existente);
+
+          if (firmaExistente !== firma) {
+            resultado[idxExistente] = { ...existente, ...copia };
+            firmas.delete(firmaExistente);
+            firmas.add(firma);
+            actualizados += 1;
+          }
+          return;
+        }
+
+        if (!firmas.has(firma)) {
+          resultado.push(copia);
+          if (clave) clavesBasicas.set(clave, resultado.length - 1);
+          firmas.add(firma);
+          agregados += 1;
+        }
+      });
+
+      return { lista: resultado, agregados, actualizados };
+    }
+
+    function buscarClavePlantaExistente(biblioteca, plantaOriginal) {
+      const objetivo = normalizarNombrePlanta(plantaOriginal);
+      return Object.keys(biblioteca).find(key => normalizarNombrePlanta(key) === objetivo) || null;
+    }
+
+    function fusionarSnapshotEnBiblioteca(data) {
+      if (!data || typeof data !== "object") {
+        throw new Error("JSON inválido");
+      }
+
+      const plantaOriginal = (data.planta || data.currentLoadedPlantKey || "").toString().trim();
+      if (!plantaOriginal) {
+        throw new Error("El archivo no tiene nombre de planta.");
+      }
+
+      const biblioteca = obtenerBibliotecaNormalizada();
+      const claveExistente = buscarClavePlantaExistente(biblioteca, plantaOriginal);
+      const nombrePlanta = claveExistente || plantaOriginal;
+
+      if (!biblioteca[nombrePlanta]) {
+        biblioteca[nombrePlanta] = {
+          plantName: nombrePlanta,
+          versions: []
+        };
+      }
+
+      const versiones = biblioteca[nombrePlanta].versions || [];
+      const ultimaVersion = versiones[0]?.snapshot || null;
+      const apostamientosNuevos = data.apostamientosCapturados || data.apostamientos || [];
+
+      if (!ultimaVersion) {
+        const snapshotNuevo = {
+          ...data,
+          planta: nombrePlanta,
+          currentLoadedPlantKey: nombrePlanta,
+          currentLoadedVersionId: null,
+          apostamientosCapturados: Array.isArray(apostamientosNuevos) ? apostamientosNuevos : [],
+          updatedAt: new Date().toISOString()
+        };
+
+        biblioteca[nombrePlanta].versions.unshift({
+          versionId: generarVersionId(),
+          savedAt: new Date().toISOString(),
+          snapshot: snapshotNuevo
+        });
+
+        guardarBibliotecaNormalizada(biblioteca);
+        return { nombrePlanta, duplicado: false, agregados: (snapshotNuevo.apostamientosCapturados || []).length, actualizados: 0 };
+      }
+
+      const fusionApostamientos = fusionarListasApostamientos(
+        ultimaVersion.apostamientosCapturados || [],
+        apostamientosNuevos
+      );
+
+      const snapshotFusionado = {
+        ...ultimaVersion,
+        ...data,
+        planta: nombrePlanta,
+        currentLoadedPlantKey: nombrePlanta,
+        currentLoadedVersionId: null,
+        fecha: data.fecha || ultimaVersion.fecha || "",
+        analista: data.analista || ultimaVersion.analista || "",
+        ubicacionGeneral: data.ubicacionGeneral || ultimaVersion.ubicacionGeneral || "",
+        observacionesGenerales: data.observacionesGenerales || ultimaVersion.observacionesGenerales || "",
+        radiografiaGeneral: data.radiografiaGeneral || ultimaVersion.radiografiaGeneral || "",
+        apostamientosCapturados: fusionApostamientos.lista,
+        updatedAt: new Date().toISOString()
+      };
+
+      const firmaFusionada = crearFirmaSnapshot(snapshotFusionado, nombrePlanta);
+      const firmaUltima = crearFirmaSnapshot(ultimaVersion, nombrePlanta);
+
+      if (firmaFusionada === firmaUltima) {
+        return { nombrePlanta, duplicado: true, agregados: 0, actualizados: 0 };
+      }
+
+      biblioteca[nombrePlanta].versions.unshift({
+        versionId: generarVersionId(),
+        savedAt: new Date().toISOString(),
+        snapshot: snapshotFusionado
+      });
+
+      guardarBibliotecaNormalizada(biblioteca);
+      return {
+        nombrePlanta,
+        duplicado: false,
+        agregados: fusionApostamientos.agregados,
+        actualizados: fusionApostamientos.actualizados
+      };
+    }
+
+    async function importarJSONFusionando(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+        const resultado = fusionarSnapshotEnBiblioteca(data);
+
+        if (resultado.duplicado) {
+          actualizarEstadoAutosave("El JSON no agregó cambios porque esa información ya existía en la planta guardada.", false);
+          alert("No se agregaron cambios porque esa planta ya contenía los mismos apostamientos y datos generales.");
+        } else {
+          actualizarEstadoAutosave("Información fusionada correctamente en la biblioteca local.", false);
+          alert(
+            "Información fusionada correctamente en la planta: " + resultado.nombrePlanta +
+            "\nApostamientos nuevos agregados: " + (resultado.agregados || 0) +
+            "\nApostamientos actualizados: " + (resultado.actualizados || 0)
+          );
+        }
+
+        renderListaPlantasGuardadas();
+
+      } catch (error) {
+        console.error(error);
+        actualizarEstadoAutosave("No se pudo fusionar el JSON.", true);
+        alert("No se pudo fusionar el archivo JSON.");
+      } finally {
+        event.target.value = "";
+      }
+    }
+
+    function extraerCampo(texto, regex) {
+      const m = texto.match(regex);
+      return m ? m[1].replace(/\s+/g, " ").trim() : "";
+    }
+
+    function detectarPerfilClave(textoPerfil) {
+      const texto = (textoPerfil || "").toUpperCase();
+      if (texto.includes("(A)") || texto.includes("AVANZADA") || texto.includes("3 O 5 AÑOS")) return "A";
+      if (texto.includes("(B)") || texto.includes("INTERMEDIA") || texto.includes("1 O 2 AÑOS")) return "B";
+      if (texto.includes("(C)") || texto.includes("PRINCIPIANTES") || texto.includes("POCA EXPERIENCIA")) return "C";
+      return "";
+    }
+
+    function convertirFechaDetectada(fechaTexto) {
+      const raw = (fechaTexto || "").trim();
+      if (!raw) return "";
+
+      if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+
+      const m1 = raw.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+      if (m1) {
+        return `${m1[3]}-${m1[2]}-${m1[1]}`;
+      }
+
+      const m2 = raw.match(/^(\d{1,2})\s+de\s+([a-záéíóú]+)\s+de\s+(\d{4})$/i);
+      if (m2) {
+        const meses = {
+          enero:"01", febrero:"02", marzo:"03", abril:"04", mayo:"05", junio:"06",
+          julio:"07", agosto:"08", septiembre:"09", setiembre:"09", octubre:"10",
+          noviembre:"11", diciembre:"12"
+        };
+        const dia = String(m2[1]).padStart(2, "0");
+        const mes = meses[m2[2].toLowerCase()] || "01";
+        const anio = m2[3];
+        return `${anio}-${mes}-${dia}`;
+      }
+
+      return "";
+    }
+
+    function val(id) {
+      if (id === "clienteServicio") {
+        const inputManual = document.getElementById("clienteServicioManual");
+        const select = document.getElementById("clienteServicio");
+        if (inputManual && inputManual.value.trim()) return inputManual.value.trim();
+        return select ? select.value : "";
+      }
+      return document.getElementById(id).value;
+    }
+
+    function setVal(id, value) {
+      if (id === "clienteServicio") {
+        const inputManual = document.getElementById("clienteServicioManual");
+        const select = document.getElementById("clienteServicio");
+        const limpio = value || "";
+
+        if (select) {
+          const existe = [...select.options].some(opt => opt.value === limpio);
+          if (limpio && !existe) {
+            if (!plantasBosch.includes(limpio)) plantasBosch.unshift(limpio);
+            recargarOpcionesPlanta(limpio);
+          } else {
+            select.value = limpio;
+          }
+        }
+
+        if (inputManual) {
+          if (limpio && select && ![...select.options].some(opt => opt.value === limpio && opt.value !== "")) {
+            inputManual.value = limpio;
+            inputManual.style.display = "block";
+          } else {
+            inputManual.value = "";
+          }
+        }
+        return;
+      }
+      document.getElementById(id).value = value;
+    }
+
+    function escapeHtml(text) {
+      return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+
+
+    const AJUSTE_INTERNO_POR_GUARDIA = 105; // 60 alimentos + 45 vigilancia de área
+
+    function esRiesgoCritico(valor) {
+      const t = String(valor || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      return t === 'critico';
+    }
+
+    function calcularApostamientoAjustado(ap = {}) {
+      const elementos = Number(ap.elementos) || 0;
+      const horasTurno = Number(ap.horasTurno) || 0;
+      const disponiblesBase = Number(ap.minDisponibles) || (horasTurno * 60 * elementos);
+      const activosBase = Number(ap.minActivos) || 0;
+      const ajusteInternoTotal = elementos * AJUSTE_INTERNO_POR_GUARDIA;
+      const activosAjustados = Math.min(disponiblesBase, activosBase + ajusteInternoTotal);
+      const inactivosAjustados = Math.max(disponiblesBase - activosAjustados, 0);
+      const porcentajeAjustado = disponiblesBase > 0 ? (activosAjustados / disponiblesBase) * 100 : 0;
+      return { ...ap, minDisponibles: disponiblesBase, minActivos: activosAjustados, minInactivos: inactivosAjustados, porcentajeActivo: porcentajeAjustado, _ajusteInternoMin: ajusteInternoTotal };
+    }
+
+    function calcularResumenAjustado(lista = []) {
+      const datos = lista.map(ap => calcularApostamientoAjustado(ap));
+      const totalApostamientos = datos.length;
+      const totalElementos = datos.reduce((a,b) => a + (Number(b.elementos) || 0), 0);
+      const puestosCriticos = datos.filter(a => esRiesgoCritico(a.riesgo)).length;
+      const totalDisponibles = datos.reduce((a,b) => a + (Number(b.minDisponibles) || 0), 0);
+      const totalActivos = datos.reduce((a,b) => a + (Number(b.minActivos) || 0), 0);
+      const totalInactivos = datos.reduce((a,b) => a + (Number(b.minInactivos) || 0), 0);
+      const promedioActivo = totalDisponibles > 0 ? (totalActivos / totalDisponibles) * 100 : 0;
+      const inactividadPromedio = totalApostamientos ? totalInactivos / totalApostamientos : 0;
+      const horasInactividad = totalInactivos / 60;
+      const turnosEquivalentes = horasInactividad / 12;
+      const guardiasEquivalentes = horasInactividad / 60;
+      return { datos, totalApostamientos, totalElementos, puestosCriticos, totalDisponibles, totalActivos, totalInactivos, promedioActivo, inactividadPromedio, horasInactividad, turnosEquivalentes, guardiasEquivalentes };
+    }
+
+    function obtenerDiagnosticoUnificado(promedioActivo) {
+      const p = Number(promedioActivo) || 0;
+      if (p < 50) return 'Aprovechamiento bajo: la planta presenta alto tiempo de inactividad ajustado. Se recomienda revisar fusión de apostamientos, redistribución de funciones, automatización y rediseño operativo.';
+      if (p < 80) return 'Aprovechamiento intermedio: la cobertura sirve, pero todavía hay espacios de inactividad que se pueden absorber con mejor diseño operativo, tecnología y redistribución de actividades.';
+      return 'Aprovechamiento adecuado: la operación presenta una carga alta. Se recomienda cuidar saturación, respaldo operativo, pausas y continuidad en horarios pico.';
+    }
+
+    function registrarEventosGlobalesAutoguardado() {
+      document.querySelectorAll("input, select, textarea").forEach(el => {
+        el.addEventListener("input", programarAutoguardado);
+        el.addEventListener("change", programarAutoguardado);
+      });
+
+      window.addEventListener("beforeunload", () => {
+        try {
+          guardarBorradorAutomatico(true);
+        } catch (e) {}
+      });
+    }
+
+
+    function clasificarNivelDashboard(porcentajeActivo) {
+      const p = Number(porcentajeActivo) || 0;
+      if (p < 50) return 'Bajo';
+      if (p < 80) return 'Intermedio';
+      return 'Adecuado';
+    }
+
+    function obtenerColorNivelDashboard(nivel) {
+      if (nivel === 'Bajo') return '#ef4444';
+      if (nivel === 'Intermedio') return '#f59e0b';
+      return '#22c55e';
+    }
+
+    function obtenerPrioridadDashboard(ap) {
+      const activo = Number(ap.porcentajeActivo) || 0;
+      const inactivos = Number(ap.minInactivos) || 0;
+      const riesgo = (ap.riesgo || '').toLowerCase();
+      if ((activo < 50 && riesgo !== 'crítico' && riesgo !== 'critico') || inactivos >= 180) return 'Alta';
+      if (activo < 80 || inactivos >= 90) return 'Media';
+      return 'Baja';
+    }
+
+    function obtenerApostamientoAjustadoDashboard(ap) {
+      return calcularApostamientoAjustado(ap);
+    }
+
+    function coincideNivelDashboard(ap, nivelFiltro = '__TODOS__') {
+      if (!nivelFiltro || nivelFiltro === '__TODOS__') return true;
+      const apAjustado = obtenerApostamientoAjustadoDashboard(ap);
+      return clasificarNivelDashboard(Number(apAjustado.porcentajeActivo) || 0) === nivelFiltro;
+    }
+
+    function toggleFiltroNivelDashboard(nivel) {
+      dashboardNivelFiltro = dashboardNivelFiltro === nivel ? '__TODOS__' : nivel;
+      actualizarDashboardInteractivo();
+      renderTablaApostamientos();
+    }
+
+    function obtenerDatosDashboard(turnoFiltro = '__TODOS__', orden = 'inactivos') {
+      const base = apostamientosCapturados.map(ap => obtenerApostamientoAjustadoDashboard({
+        ...ap,
+        nombre: ap.nombre || 'Sin nombre',
+        turnoAnalizado: ap.turnoAnalizado || 'No especificado',
+        riesgo: ap.riesgo || 'No especificado',
+        elementos: Number(ap.elementos) || 0,
+        horasTurno: Number(ap.horasTurno) || 0,
+        minDisponibles: Number(ap.minDisponibles) || 0,
+        minActivos: Number(ap.minActivos) || 0,
+        minInactivos: Number(ap.minInactivos) || 0,
+        porcentajeActivo: Number(ap.porcentajeActivo) || 0,
+        tecnologiasRecomendadas: Array.isArray(ap.tecnologiasRecomendadas) ? ap.tecnologiasRecomendadas.filter(Boolean) : [],
+        decisionSugerida: ap.decisionSugerida || ''
+      }));
+
+      const turnos = [...new Set(base.map(a => a.turnoAnalizado).filter(Boolean))];
+      let filtrados = turnoFiltro && turnoFiltro !== '__TODOS__'
+        ? base.filter(a => a.turnoAnalizado === turnoFiltro)
+        : base;
+      filtrados = filtrados.filter(a => coincideNivelDashboard(a, dashboardNivelFiltro));
+
+      const ordenadores = {
+        inactivos: (a,b) => b.minInactivos - a.minInactivos,
+        activos: (a,b) => b.porcentajeActivo - a.porcentajeActivo,
+        nombre: (a,b) => a.nombre.localeCompare(b.nombre, 'es'),
+        riesgo: (a,b) => a.riesgo.localeCompare(b.riesgo, 'es')
+      };
+      filtrados = [...filtrados].sort(ordenadores[orden] || ordenadores.inactivos);
+
+      const totalApostamientos = filtrados.length;
+      const totalElementos = filtrados.reduce((a,b) => a + b.elementos, 0);
+      const totalActivos = filtrados.reduce((a,b) => a + b.minActivos, 0);
+      const totalInactivos = filtrados.reduce((a,b) => a + b.minInactivos, 0);
+      const totalDisponibles = filtrados.reduce((a,b) => a + b.minDisponibles, 0);
+      const promedioActivo = totalDisponibles > 0 ? (totalActivos / totalDisponibles) * 100 : 0;
+      const inactividadPromedio = totalApostamientos ? totalInactivos / totalApostamientos : 0;
+
+      const niveles = { Bajo:0, Intermedio:0, Adecuado:0 };
+      const tecnologias = {};
+      filtrados.forEach(ap => {
+        niveles[clasificarNivelDashboard(ap.porcentajeActivo)]++;
+        ap.tecnologiasRecomendadas.forEach(t => {
+          const key = String(t).trim();
+          if (key) tecnologias[key] = (tecnologias[key] || 0) + 1;
+        });
+      });
+
+      const topInactivos = [...filtrados].sort((a,b) => b.minInactivos - a.minInactivos).slice(0,8);
+      const topTecnologias = Object.entries(tecnologias).sort((a,b) => b[1] - a[1]).slice(0,8);
+
+      const oportunidadesAutomatizacion = [...filtrados]
+        .filter(ap => ap.tecnologiasRecomendadas.length || ap.porcentajeActivo < 80)
+        .sort((a,b) => {
+          const pa = obtenerPrioridadDashboard(a), pb = obtenerPrioridadDashboard(b);
+          const rank = { Alta:3, Media:2, Baja:1 };
+          return rank[pb] - rank[pa] || b.minInactivos - a.minInactivos;
+        })
+        .slice(0,10)
+        .map(ap => ({
+          ...ap,
+          prioridad: obtenerPrioridadDashboard(ap),
+          accion: ap.decisionSugerida || (ap.tecnologiasRecomendadas.length ? 'Automatizar tareas repetitivas' : 'Revisar redistribución o fusión')
+        }));
+
+      const redistribucion = [...filtrados]
+        .filter(ap => ap.minInactivos > 0)
+        .sort((a,b) => b.minInactivos - a.minInactivos)
+        .slice(0,10)
+        .map(ap => ({
+          ...ap,
+          oportunidad: ap.minInactivos >= 180 ? 'Alta' : ap.minInactivos >= 90 ? 'Media' : 'Baja',
+          recomendacion: ap.porcentajeActivo < 50
+            ? 'Mover parte de la carga o fusionar actividades con otro puesto.'
+            : ap.porcentajeActivo < 80
+              ? 'Ajustar horarios, formatos y rondines para ocupar tiempos de inactividad.'
+              : 'Mantener operación; revisar solo microespacios o picos.'
+        }));
+
+      const diagnostico = obtenerDiagnosticoUnificado(promedioActivo);
+
+      return {
+        turnos,
+        filtrados,
+        totalApostamientos,
+        totalElementos,
+        totalActivos,
+        totalInactivos,
+        totalDisponibles,
+        promedioActivo,
+        inactividadPromedio,
+        niveles,
+        topInactivos,
+        topTecnologias,
+        oportunidadesAutomatizacion,
+        redistribucion,
+        diagnostico
+      };
+    }
+
+    function crearTarjetaDashboard(titulo, valor, subtitulo = '') {
+      return `
+        <div class="dashboard-kpi">
+          <div class="kpi-label">${escapeHtml(titulo)}</div>
+          <div class="kpi-value">${escapeHtml(String(valor))}</div>
+          <div class="kpi-sub">${escapeHtml(subtitulo)}</div>
+        </div>
+      `;
+    }
+
+    function renderBarRows(items, maxValue, valueKey, colorFn, labelFn, suffix = '') {
+      if (!items.length) return '<p class="dash-note">Sin datos suficientes.</p>';
+      const max = maxValue > 0 ? maxValue : 1;
+      return `
+        <div class="bar-list">
+          ${items.map(ap => {
+            const value = Number(ap[valueKey]) || 0;
+            const width = Math.max(4, (value / max) * 100);
+            const color = typeof colorFn === 'function' ? colorFn(ap) : colorFn;
+            return `
+              <div class="bar-row" title="${escapeHtml(labelFn(ap))}">
+                <div class="bar-label">${escapeHtml(ap.nombre)}</div>
+                <div class="bar-track"><div class="bar-fill" style="width:${width}%;background:${color};"></div></div>
+                <div class="bar-value">${value.toFixed(0)}${suffix}</div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    function generarDashboardEjecutivo() {
+      const dashboard = document.getElementById('dashboardContenido');
+      const planta = val('clienteServicio') || 'No especificada';
+      const fecha = val('fecha') || 'No especificada';
+      const analista = val('analista') || 'No especificado';
+
+      dashboard.innerHTML = `
+        <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px;">
+          <div>
+            <div style="font-size:24px;font-weight:800;color:#0f172a;">Dashboard operativo de apostamientos</div>
+            <div style="font-size:14px;color:#64748b;margin-top:4px;">Planta: <strong>${escapeHtml(planta)}</strong> · Fecha: ${escapeHtml(fecha)} · Analista: ${escapeHtml(analista)}</div>
+          </div>
+          <div class="no-print"><button class="ghost" onclick="exportarDashboardPDF()">Imprimir / Guardar PDF</button></div>
+        </div>
+
+        <div class="dash-controls no-print">
+          <div class="field">
+            <label>Filtrar por turno</label>
+            <select id="dashFiltroTurno" onchange="actualizarDashboardInteractivo()"></select>
+          </div>
+
+        </div>
+
+        <div id="dashboardRender"></div>
+      `;
+
+      dashboardNivelFiltro = '__TODOS__';
+      const filtro = document.getElementById('dashFiltroTurno');
+      const datos = obtenerDatosDashboard('__TODOS__', 'inactivos');
+      filtro.innerHTML = `<option value="__TODOS__">Todos los turnos</option>${datos.turnos.map(t => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('')}`;
+      actualizarDashboardInteractivo();
+      document.getElementById('modalDashboard').classList.add('show');
+    }
+
+    function actualizarDashboardInteractivo() {
+      const cont = document.getElementById('dashboardRender');
+      if (!cont) return;
+
+      const turno = document.getElementById('dashFiltroTurno') ? document.getElementById('dashFiltroTurno').value : '__TODOS__';
+      const orden = 'inactivos';
+      const obs = val('observacionesGenerales') || 'Sin observaciones generales registradas.';
+      const d = obtenerDatosDashboard(turno, orden);
+      const horasInactividad = d.totalInactivos / 60;
+      const turnosEquivalentes = horasInactividad / 12;
+      const guardiasEquivalentes = horasInactividad / 60;
+      const guardiasRedondeados = Math.ceil(guardiasEquivalentes);
+
+      if (!d.totalApostamientos) {
+        cont.innerHTML = '<div class="dashboard-card"><h4>Sin datos</h4><p class="dash-note">Primero guarda uno o más apostamientos para poder generar el dashboard.</p></div>';
+        return;
+      }
+
+      const maxInactivo = Math.max(...d.topInactivos.map(a => a.minInactivos), 1);
+      const maxTecnologia = Math.max(...d.topTecnologias.map(t => t[1]), 1, 1);
+      const optimizacionHtml = d.topInactivos.length
+        ? d.topInactivos.map(ap => {
+            const porcentaje = d.totalInactivos > 0 ? (ap.minInactivos / d.totalInactivos) * 100 : 0;
+            return `
+              <div class="bar-row" title="${escapeHtml(ap.nombre)}: ${ap.minInactivos.toFixed(0)} minutos recuperables potenciales (${porcentaje.toFixed(1)}% del total)">
+                <div class="bar-label">${escapeHtml(ap.nombre)}</div>
+                <div class="bar-track"><div class="bar-fill" style="width:${Math.max(4, porcentaje)}%;background:#6366f1;"></div></div>
+                <div class="bar-value">${porcentaje.toFixed(1)}%</div>
+              </div>`;
+          }).join('')
+        : '<p class="dash-note">Sin datos suficientes.</p>';
+
+      const tecnologiasHtml = d.topTecnologias.length
+        ? d.topTecnologias.map(([tec,c]) => `
+            <div class="bar-row" title="${escapeHtml(tec)}: ${c} coincidencias">
+              <div class="bar-label">${escapeHtml(tec)}</div>
+              <div class="bar-track"><div class="bar-fill" style="width:${(c/maxTecnologia)*100}%;background:#8b5cf6;"></div></div>
+              <div class="bar-value">${c}</div>
+            </div>`).join('')
+        : '<p class="dash-note">No hay tecnologías capturadas todavía.</p>';
+
+      const comparativoHtml = d.filtrados.slice(0,8).map(ap => {
+        const total = Math.max(ap.minDisponibles, ap.minActivos + ap.minInactivos, 1);
+        const activoW = Math.max(2, (ap.minActivos / total) * 100);
+        const inactivoW = Math.max(2, (ap.minInactivos / total) * 100);
+        return `
+          <div class="bar-row" title="${escapeHtml(ap.nombre)} · Activos: ${ap.minActivos.toFixed(0)} min · Tiempo de inactividad: ${ap.minInactivos.toFixed(0)} min · % activo: ${ap.porcentajeActivo.toFixed(1)}%">
+            <div class="bar-label">${escapeHtml(ap.nombre)}</div>
+            <div>
+              <div class="stack-track">
+                <div class="stack-active" style="width:${activoW}%;"></div>
+                <div class="stack-inactive" style="width:${inactivoW}%;"></div>
+              </div>
+            </div>
+            <div class="bar-value">${ap.porcentajeActivo.toFixed(1)}%</div>
+          </div>
+        `;
+      }).join('');
+
+      const autoRows = d.oportunidadesAutomatizacion.map(ap => {
+        const pClass = ap.prioridad === 'Alta' ? 'priority-alta' : ap.prioridad === 'Media' ? 'priority-media' : 'priority-baja';
+        return `
+          <tr>
+            <td>${escapeHtml(ap.nombre)}</td>
+            <td>${escapeHtml(ap.turnoAnalizado)}</td>
+            <td>${(ap.minInactivos || 0).toFixed(0)} min</td>
+            <td>${(ap.porcentajeActivo || 0).toFixed(1)}%</td>
+            <td><span class="priority-pill ${pClass}">${escapeHtml(ap.prioridad)}</span></td>
+            <td>${escapeHtml(ap.tecnologiasRecomendadas.length ? ap.tecnologiasRecomendadas.join(', ') : 'Revisión operativa')}</td>
+            <td>${escapeHtml(ap.accion)}</td>
+          </tr>
+        `;
+      }).join('');
+
+      const redRows = d.redistribucion.map(ap => {
+        const pClass = ap.oportunidad === 'Alta' ? 'priority-alta' : ap.oportunidad === 'Media' ? 'priority-media' : 'priority-baja';
+        return `
+          <tr>
+            <td>${escapeHtml(ap.nombre)}</td>
+            <td>${escapeHtml(ap.turnoAnalizado)}</td>
+            <td>${(ap.minInactivos || 0).toFixed(0)} min</td>
+            <td>${(ap.porcentajeActivo || 0).toFixed(1)}%</td>
+            <td><span class="priority-pill ${pClass}">${escapeHtml(ap.oportunidad)}</span></td>
+            <td>${escapeHtml(ap.recomendacion)}</td>
+          </tr>
+        `;
+      }).join('');
+
+      cont.innerHTML = `
+        <div class="dashboard-kpis">
+          ${crearTarjetaDashboard('Aprovechamiento promedio', d.promedioActivo.toFixed(1) + '%', 'Lectura global del turno filtrado')}
+          ${crearTarjetaDashboard('Tiempo de inactividad total', d.totalInactivos.toFixed(0) + ' min', 'Espacio potencial para redistribuir o automatizar')}
+          ${crearTarjetaDashboard('Tiempo activo total', d.totalActivos.toFixed(0) + ' min', 'Carga operativa realmente ejecutada')}
+          ${crearTarjetaDashboard('Inactividad promedio', d.inactividadPromedio.toFixed(0) + ' min', 'Promedio por apostamiento')}
+          ${crearTarjetaDashboard('Apostamientos analizados', d.totalApostamientos, 'Con filtro actual aplicado')}
+          ${crearTarjetaDashboard('Elementos cubiertos', d.totalElementos, 'Total de elementos registrados')}
+        </div>
+
+        <div class="dashboard-grid">
+          <div class="dashboard-card dash-span-12">
+            <h4>Lectura ejecutiva</h4>
+            <p class="dash-note"><strong>Diagnóstico:</strong> ${escapeHtml(d.diagnostico)}</p>
+            <p class="dash-note" style="margin-top:8px;"><strong>Filtro de semáforo:</strong> ${dashboardNivelFiltro === '__TODOS__' ? 'Todos los niveles' : escapeHtml(dashboardNivelFiltro)}</p>
+            <p class="dash-note" style="margin-top:8px;"><strong>Observaciones generales:</strong> ${escapeHtml(obs)}</p>
+          </div>
+
+          <div class="dashboard-card dash-span-12">
+            <h4>Conversión de tiempo de inactividad</h4>
+            <p class="dash-note">Convierte los minutos de inactividad del filtro actual a horas, turnos de 12 horas y guardias equivalentes bajo una jornada máxima de 60 horas semanales.</p>
+            <div class="equiv-grid">
+              <div class="equiv-box">
+                <div class="equiv-label">Horas representadas</div>
+                <div class="equiv-value">${horasInactividad.toFixed(1)} h</div>
+                <div class="equiv-sub">${d.totalInactivos.toFixed(0)} min ÷ 60</div>
+              </div>
+              <div class="equiv-box">
+                <div class="equiv-label">Turnos equivalentes</div>
+                <div class="equiv-value">${turnosEquivalentes.toFixed(2)}</div>
+                <div class="equiv-sub">Base: turnos de 12 horas</div>
+              </div>
+              <div class="equiv-box">
+                <div class="equiv-label">Guardias equivalentes</div>
+                <div class="equiv-value">${guardiasEquivalentes.toFixed(2)}</div>
+                <div class="equiv-sub">Base: 60 horas por guardia a la semana</div>
+              </div>
+              <div class="equiv-box">
+                <div class="equiv-label">Redondeo operativo</div>
+                <div class="equiv-value">${guardiasRedondeados}</div>
+                <div class="equiv-sub">Guardias completos necesarios para cubrir esas horas</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="dashboard-card dash-span-4">
+            <h4>Semáforo operativo</h4>
+            <div class="status-strip">
+              <div class="status-box status-bajo ${dashboardNivelFiltro === 'Bajo' ? 'active' : ''}" onclick="toggleFiltroNivelDashboard('Bajo')" title="Filtrar apostamientos con nivel bajo">${d.niveles.Bajo}<small>Bajo (&lt; 50% activo)</small></div>
+              <div class="status-box status-intermedio ${dashboardNivelFiltro === 'Intermedio' ? 'active' : ''}" onclick="toggleFiltroNivelDashboard('Intermedio')" title="Filtrar apostamientos con nivel intermedio">${d.niveles.Intermedio}<small>Intermedio (50 a 79.9%)</small></div>
+              <div class="status-box status-adecuado ${dashboardNivelFiltro === 'Adecuado' ? 'active' : ''}" onclick="toggleFiltroNivelDashboard('Adecuado')" title="Filtrar apostamientos con nivel adecuado">${d.niveles.Adecuado}<small>Adecuado (80% o más)</small></div>
+            </div>
+            <div class="status-reset-btn ${dashboardNivelFiltro === '__TODOS__' ? 'active' : ''}" onclick="dashboardNivelFiltro='__TODOS__';actualizarDashboardInteractivo();renderTablaApostamientos();">Todos</div>
+          </div>
+
+          <div class="dashboard-card dash-span-8">
+            <h4>Comparativo activo vs inactivo</h4>
+            ${comparativoHtml || '<p class="dash-note">Sin información.</p>'}
+            <div class="legend-row"><span class="legend-item"><span class="legend-dot" style="background:#38bdf8;"></span>Tiempo activo</span><span class="legend-item"><span class="legend-dot" style="background:#f59e0b;"></span>Tiempo de inactividad</span></div>
+          </div>
+
+          <div class="dashboard-card dash-span-6">
+            <h4>Top de tiempo de inactividad</h4>
+            ${renderBarRows(d.topInactivos, maxInactivo, 'minInactivos', '#ef4444', ap => `${ap.nombre}: ${ap.minInactivos.toFixed(0)} minutos de inactividad`, ' min')}
+          </div>
+
+          <div class="dashboard-card dash-span-6">
+            <h4>Potencial de optimización por apostamiento</h4>
+            <p class="dash-note" style="margin-bottom:10px;">Muestra qué porcentaje del tiempo total de inactividad del filtro actual se concentra en cada apostamiento. Entre más alto, mayor oportunidad de rediseño operativo, automatización o redistribución de actividades.</p><div class="bar-list">${optimizacionHtml}</div>
+          </div>
+
+          <div class="dashboard-card dash-span-6">
+            <h4>Tecnologías más repetidas</h4>
+            <div class="bar-list">${tecnologiasHtml}</div>
+          </div>
+
+          <div class="dashboard-card dash-span-6">
+            <h4>Interpretación rápida</h4>
+            <ul style="margin:0;padding-left:18px;line-height:1.7;font-size:13px;color:#334155;">
+              <li><strong>Rojo:</strong> apostamiento con mucho tiempo de inactividad o baja ocupación. Aquí está la oportunidad más clara de rediseño operativo.</li>
+              <li><strong>Amarillo:</strong> la operación funciona, pero todavía puede absorber tareas, formatos o rondines mejor programados.</li>
+              <li><strong>Verde:</strong> operación adecuada. No ajustes la cobertura por intuición; primero valida picos, respaldo y continuidad.</li>
+              <li><strong>Tecnología:</strong> cuando se repite varias veces, indica una línea clara de automatización para varias casetas o módulos.</li>
+            </ul>
+          </div>
+
+          <div class="dashboard-card dash-span-12">
+            <h4>Oportunidades de automatización</h4>
+            <div class="dashboard-table-wrap">
+              <table class="dashboard-table">
+                <thead><tr><th>Apostamiento</th><th>Turno</th><th>Min de inactividad</th><th>% activo</th><th>Prioridad</th><th>Tecnología sugerida</th><th>Acción sugerida</th></tr></thead>
+                <tbody>${autoRows || '<tr><td colspan="7">Sin oportunidades detectadas.</td></tr>'}</tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="dashboard-card dash-span-12">
+            <h4>Oportunidades de redistribución del tiempo</h4>
+            <div class="dashboard-table-wrap">
+              <table class="dashboard-table">
+                <thead><tr><th>Apostamiento</th><th>Turno</th><th>Min de inactividad</th><th>% activo</th><th>Oportunidad</th><th>Recomendación</th></tr></thead>
+                <tbody>${redRows || '<tr><td colspan="6">Sin oportunidades detectadas.</td></tr>'}</tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function exportarDashboardPDF() {
+      const dashboard = document.getElementById('dashboardContenido');
+      const dashboardRender = document.getElementById('dashboardRender');
+      if (!dashboard || !dashboardRender) {
+        alert('Primero genera el dashboard.');
+        return;
+      }
+
+      const planta = val('clienteServicio') || 'planta';
+      const fecha = val('fecha') || '';
+      const analista = val('analista') || '';
+      const turno = document.getElementById('dashFiltroTurno') ? document.getElementById('dashFiltroTurno').value : '__TODOS__';
+      const nombreTurno = !turno || turno === '__TODOS__' ? 'Todos los turnos' : turno;
+      const nombreArchivo = (!turno || turno === '__TODOS__' ? 'todos_los_turnos' : turno)
+        .replace(/\s+/g, '_')
+        .toLowerCase();
+      const contenido = dashboardRender.innerHTML;
+
+      const win = window.open('', '_blank');
+      if (!win) {
+        alert('Tu navegador bloqueó la ventana para imprimir. Permite ventanas emergentes e inténtalo de nuevo.');
+        return;
+      }
+
+      win.document.open();
+      win.document.write(`
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <title>${escapeHtml(planta)} apostamientos</title>
+          <style>
+            @page{size:A4 landscape;margin:8mm;}
+            html,body{padding:0;margin:0;background:#ffffff;color:#0f172a;font-family:Arial,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact;}
+            *{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact;}
+            body{font-size:10.5px;line-height:1.28;}
+            .print-shell{width:100%;max-width:none;margin:0 auto;padding:0;}
+            .print-header{margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #dbe4f0;}
+            .print-title{font-size:24px;font-weight:800;margin-bottom:6px;color:#0f172a;}
+            .print-meta{font-size:13px;color:#475569;line-height:1.6;}
+            .dashboard-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:10px;}
+            .dashboard-kpi,.dashboard-card{background:#fff;border:1px solid #d6dfeb;border-radius:14px;padding:14px;page-break-inside:avoid;break-inside:avoid;overflow:hidden;}
+            .dashboard-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:12px;align-items:start;}
+            .dash-span-12{grid-column:span 12;}
+            .dash-span-8{grid-column:span 8;}
+            .dash-span-6{grid-column:span 6;}
+            .dash-span-4{grid-column:span 4;}
+            .dashboard-card h4{font-size:16px;line-height:1.3;margin:0 0 10px 0;color:#0f172a;}
+            .dashboard-kpi .kpi-label{font-size:12px;color:#64748b;margin-bottom:8px;}
+            .dashboard-kpi .kpi-value{font-size:24px;font-weight:800;line-height:1.05;color:#0f172a;}
+            .dashboard-kpi .kpi-sub,.dash-note{font-size:12px;color:#475569;line-height:1.5;margin-top:8px;}
+            .status-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
+            .status-box{border-radius:12px;padding:12px;font-weight:700;font-size:22px;line-height:1.1;text-align:left;}
+            .status-box small{display:block;font-size:11px;font-weight:600;opacity:.9;margin-top:6px;line-height:1.35;}
+            .status-bajo{background:#fee2e2;border:1px solid #fecaca;color:#991b1b;}
+            .status-intermedio{background:#fef3c7;border:1px solid #fde68a;color:#92400e;}
+            .status-adecuado{background:#dcfce7;border:1px solid #bbf7d0;color:#166534;}
+            .equiv-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:10px;}
+            .equiv-box{background:#f8fbff;border:1px solid #d6dfeb;border-radius:12px;padding:12px;min-width:0;}
+            .equiv-label{font-size:11px;color:#64748b;font-weight:700;margin-bottom:6px;}
+            .equiv-value{font-size:22px;font-weight:800;color:#0f172a;line-height:1.1;}
+            .equiv-sub{font-size:10px;color:#64748b;margin-top:6px;line-height:1.35;}
+            .bar-list{display:flex;flex-direction:column;gap:8px;width:100%;}
+            .bar-row{display:grid;grid-template-columns:minmax(110px,180px) minmax(200px,1fr) 60px;gap:8px;align-items:center;width:100%;}
+            .bar-label{font-size:12px;font-weight:700;color:#334155;overflow-wrap:anywhere;word-break:break-word;white-space:normal;}
+            .bar-track{height:16px;background:#eef2f7;border-radius:999px;overflow:hidden;position:relative;min-width:0;width:100%;}
+            .bar-fill{height:100%;border-radius:999px;}
+            .bar-value{font-size:11px;color:#475569;text-align:right;font-weight:700;white-space:nowrap;}
+            .stack-track{height:18px;background:#eef2f7;border-radius:999px;overflow:hidden;display:flex;width:100%;min-width:0;}
+            .stack-active{background:#38bdf8;height:100%;}
+            .stack-inactive{background:#f59e0b;height:100%;}
+            .legend-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;font-size:11px;color:#475569;}
+            .legend-item{display:flex;align-items:center;gap:6px;}
+            .legend-dot{width:10px;height:10px;border-radius:999px;display:inline-block;flex:0 0 auto;}
+            .priority-pill{display:inline-flex;align-items:center;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap;}
+            .priority-alta{background:#fee2e2;color:#b91c1c;}
+            .priority-media{background:#fef3c7;color:#92400e;}
+            .priority-baja{background:#dcfce7;color:#166534;}
+            .dashboard-table-wrap{width:100%;overflow:visible;}
+            .dashboard-table{width:100%;border-collapse:collapse;font-size:9px;table-layout:fixed;}
+            .dashboard-table th,.dashboard-table td{padding:5px 4px;border-bottom:1px solid #e5e7eb;vertical-align:top;text-align:left;overflow-wrap:anywhere;word-break:break-word;}
+            .dashboard-table th{text-transform:uppercase;font-size:9px;letter-spacing:.03em;color:#64748b;background:#f8fafc;}
+            ul{margin:0;padding-left:18px;}
+            .page-break-before{page-break-before:always;break-before:page;}
+            .avoid-break{page-break-inside:avoid;break-inside:avoid;}
+            .print-footer{margin-top:10px;font-size:10px;color:#64748b;text-align:right;}
+            @media screen{
+              body{padding:16px;background:#e5e7eb;}
+              .print-shell{background:#fff;padding:18px;border-radius:12px;box-shadow:0 6px 30px rgba(15,23,42,.10);}
+            }
+            @media print{
+              body{padding:0;background:#fff;}
+              .print-shell{max-width:none;padding:0;box-shadow:none;}
+              .dashboard-card,.dashboard-kpi{box-shadow:none;}
+            }
+          </style>
+        </head>
+        <body>
+          <div class="print-shell">
+            <div class="print-header avoid-break">
+              <div class="print-title">Dashboard operativo de apostamientos</div>
+              <div class="print-meta">
+                <strong>Planta:</strong> ${escapeHtml(planta)} &nbsp; | &nbsp;
+                <strong>Fecha:</strong> ${escapeHtml(fecha)} &nbsp; | &nbsp;
+                <strong>Analista:</strong> ${escapeHtml(analista)} &nbsp; | &nbsp;
+                <strong>Turno:</strong> ${escapeHtml(nombreTurno)}
+              </div>
+            </div>
+            ${contenido}
+            <div class="print-footer">Generado desde la Plataforma de Análisis de Apostamientos</div>
+          </div>
+          <script>
+            window.addEventListener('load', function(){
+              setTimeout(function(){ window.focus(); window.print(); }, 700);
+            });
+          <\/script>
+        </body>
+        </html>
+      `);
+      win.document.close();
+    }
+
+    function cerrarModalDashboard() {
+      document.getElementById('modalDashboard').classList.remove('show');
+    }
+
+    document.getElementById("modalPlantas").addEventListener("click", function(e){
+      if (e.target.id === "modalPlantas") cerrarModalPlantas();
+    });
+
+    document.getElementById("modalDashboard").addEventListener("click", function(e){
+      if (e.target.id === "modalDashboard") cerrarModalDashboard();
+    });
+
+
+
+    /* =========================================================
+       CORRECCIÓN FINAL: cálculo único para tabla, consolidado,
+       dashboard, radiografía e impresión.
+       Ajuste interno no visible: 105 min por guardia por turno.
+       ========================================================= */
+
+    const AJUSTE_OPERATIVO_INTERNO_MIN = 105; // 60 alimentos + 45 vigilancia de área
+
+    function numeroSeguro(v, fallback = 0) {
+      const n = Number(v);
+      return Number.isFinite(n) ? n : fallback;
+    }
+
+    function calcularMinutosOperativosOriginales(ap = {}) {
+      const funciones = Array.isArray(ap.funciones) ? ap.funciones : [];
+      const formatos = Array.isArray(ap.formatos) ? ap.formatos : [];
+
+      const minFunciones = funciones.reduce((total, f) => {
+        const tiempoEvento = numeroSeguro(f.tiempoEvento, NaN);
+        const eventosTurno = numeroSeguro(f.eventosTurno, NaN);
+        const tiempoTotal = numeroSeguro(f.tiempoTotal, NaN);
+        if (Number.isFinite(tiempoEvento) && Number.isFinite(eventosTurno)) return total + (tiempoEvento * eventosTurno);
+        if (Number.isFinite(tiempoTotal)) return total + tiempoTotal;
+        return total;
+      }, 0);
+
+      const minFormatos = formatos.reduce((total, f) => {
+        const tiempoLlenado = numeroSeguro(f.tiempoLlenado, NaN);
+        const vecesTurno = numeroSeguro(f.vecesTurno, NaN);
+        if (Number.isFinite(tiempoLlenado) && Number.isFinite(vecesTurno)) return total + (tiempoLlenado * vecesTurno);
+        return total;
+      }, 0);
+
+      const calculado = minFunciones + minFormatos;
+      if (calculado > 0) return calculado;
+      return Math.max(0, numeroSeguro(ap._minActivosOriginales, numeroSeguro(ap.minActivos, 0)));
+    }
+
+    function calcularApostamientoAjustado(ap = {}) {
+      const elementos = Math.max(0, numeroSeguro(ap.elementos, 0));
+      const horasTurno = Math.max(0, numeroSeguro(ap.horasTurno, 12));
+
+      // Fuente única: el tiempo operativo original se recalcula desde funciones + formatos.
+      // El ajuste interno SÍ se considera como tiempo activo necesario del turno:
+      // 60 min de alimentos + 45 min de vigilancia de área por guardia.
+      // No se muestra como función visible, pero se suma al tiempo activo para que
+      // tabla, consolidado, dashboard, radiografía y PDF coincidan.
+      const disponiblesBrutos = Math.max(0, horasTurno * 60 * elementos);
+      const ajuste = Math.max(0, elementos * AJUSTE_OPERATIVO_INTERNO_MIN);
+      const activosOriginales = Math.max(0, calcularMinutosOperativosOriginales(ap));
+      const activos = Math.min(disponiblesBrutos, activosOriginales + ajuste);
+      const disponibles = disponiblesBrutos;
+      const inactivos = Math.max(0, disponibles - activos);
+      const porcentaje = disponibles > 0 ? (activos / disponibles) * 100 : 0;
+
+      return {
+        ...ap,
+        elementos,
+        horasTurno,
+        minDisponibles: disponibles,
+        minActivos: activos,
+        minInactivos: inactivos,
+        porcentajeActivo: porcentaje,
+        _minDisponiblesBrutos: disponiblesBrutos,
+        _minActivosOriginales: activosOriginales,
+        _ajusteInternoMin: ajuste
+      };
+    }
+
+    function obtenerListaAjustada(lista = apostamientosCapturados) {
+      return (Array.isArray(lista) ? lista : []).map(ap => calcularApostamientoAjustado(ap));
+    }
+
+    function calcularResumenAjustado(lista = apostamientosCapturados) {
+      const datos = obtenerListaAjustada(lista);
+      const totalApostamientos = datos.length;
+      const totalElementos = datos.reduce((a,b) => a + numeroSeguro(b.elementos), 0);
+      const puestosCriticos = datos.filter(a => esRiesgoCritico(a.riesgo)).length;
+      const totalDisponibles = datos.reduce((a,b) => a + numeroSeguro(b.minDisponibles), 0);
+      const totalActivos = datos.reduce((a,b) => a + numeroSeguro(b.minActivos), 0);
+      const totalInactivos = datos.reduce((a,b) => a + numeroSeguro(b.minInactivos), 0);
+      const promedioActivo = totalDisponibles > 0 ? (totalActivos / totalDisponibles) * 100 : 0;
+      const inactividadPromedio = totalApostamientos > 0 ? totalInactivos / totalApostamientos : 0;
+      const horasInactividad = totalInactivos / 60;
+      const turnosEquivalentes = horasInactividad / 12;
+      const guardiasEquivalentes = horasInactividad / 60;
+      return { datos, totalApostamientos, totalElementos, puestosCriticos, totalDisponibles, totalActivos, totalInactivos, promedioActivo, inactividadPromedio, horasInactividad, turnosEquivalentes, guardiasEquivalentes };
+    }
+
+    function obtenerDiagnosticoUnificado(promedioActivo) {
+      const p = numeroSeguro(promedioActivo, 0);
+      if (p < 50) return 'Aprovechamiento bajo: la planta presenta alto tiempo de inactividad ajustado. Se recomienda revisar fusión de apostamientos, redistribución de funciones, automatización y rediseño operativo.';
+      if (p < 80) return 'Aprovechamiento intermedio: la cobertura sirve, pero todavía hay espacios de inactividad que se pueden absorber con mejor diseño operativo, tecnología y redistribución de actividades.';
+      return 'Aprovechamiento adecuado: la operación presenta una carga alta. Se recomienda cuidar saturación, respaldo operativo, pausas y continuidad en horarios pico.';
+    }
+
+    function obtenerApostamientoAjustadoDashboard(ap) {
+      return calcularApostamientoAjustado(ap);
+    }
+
+    function coincideNivelDashboard(ap, nivelFiltro = '__TODOS__') {
+      if (!nivelFiltro || nivelFiltro === '__TODOS__') return true;
+      const a = calcularApostamientoAjustado(ap);
+      return clasificarNivelDashboard(a.porcentajeActivo) === nivelFiltro;
+    }
+
+    function obtenerDatosDashboard(turnoFiltro = '__TODOS__', orden = 'inactivos') {
+      const todosAjustados = obtenerListaAjustada(apostamientosCapturados).map(ap => ({
+        ...ap,
+        nombre: ap.nombre || 'Sin nombre',
+        turnoAnalizado: ap.turnoAnalizado || 'No especificado',
+        riesgo: ap.riesgo || 'No especificado',
+        tecnologiasRecomendadas: Array.isArray(ap.tecnologiasRecomendadas) ? ap.tecnologiasRecomendadas.filter(Boolean) : [],
+        decisionSugerida: ap.decisionSugerida || ''
+      }));
+
+      const turnos = [...new Set(todosAjustados.map(a => a.turnoAnalizado).filter(Boolean))];
+      let porTurno = turnoFiltro && turnoFiltro !== '__TODOS__'
+        ? todosAjustados.filter(a => a.turnoAnalizado === turnoFiltro)
+        : todosAjustados;
+
+      const nivelesGlobalesDelTurno = { Bajo:0, Intermedio:0, Adecuado:0 };
+      porTurno.forEach(ap => nivelesGlobalesDelTurno[clasificarNivelDashboard(ap.porcentajeActivo)]++);
+
+      let filtrados = porTurno.filter(a => coincideNivelDashboard(a, dashboardNivelFiltro));
+      const ordenadores = {
+        inactivos: (a,b) => b.minInactivos - a.minInactivos,
+        activos: (a,b) => b.porcentajeActivo - a.porcentajeActivo,
+        nombre: (a,b) => a.nombre.localeCompare(b.nombre, 'es'),
+        riesgo: (a,b) => a.riesgo.localeCompare(b.riesgo, 'es')
+      };
+      filtrados = [...filtrados].sort(ordenadores[orden] || ordenadores.inactivos);
+
+      const resumen = calcularResumenAjustado(filtrados);
+      const tecnologias = {};
+      filtrados.forEach(ap => {
+        (ap.tecnologiasRecomendadas || []).forEach(t => {
+          const key = String(t).trim();
+          if (key) tecnologias[key] = (tecnologias[key] || 0) + 1;
+        });
+      });
+
+      const topInactivos = [...filtrados].sort((a,b) => b.minInactivos - a.minInactivos).slice(0,8);
+      const topTecnologias = Object.entries(tecnologias).sort((a,b) => b[1] - a[1]).slice(0,8);
+
+      const oportunidadesAutomatizacion = [...filtrados]
+        .filter(ap => (ap.tecnologiasRecomendadas || []).length || ap.porcentajeActivo < 80)
+        .sort((a,b) => {
+          const pa = obtenerPrioridadDashboard(a), pb = obtenerPrioridadDashboard(b);
+          const rank = { Alta:3, Media:2, Baja:1 };
+          return rank[pb] - rank[pa] || b.minInactivos - a.minInactivos;
+        })
+        .slice(0,10)
+        .map(ap => ({
+          ...ap,
+          prioridad: obtenerPrioridadDashboard(ap),
+          accion: ap.decisionSugerida || ((ap.tecnologiasRecomendadas || []).length ? 'Automatizar tareas repetitivas' : 'Revisar redistribución o fusión')
+        }));
+
+      const redistribucion = [...filtrados]
+        .filter(ap => ap.minInactivos > 0)
+        .sort((a,b) => b.minInactivos - a.minInactivos)
+        .slice(0,10)
+        .map(ap => ({
+          ...ap,
+          oportunidad: ap.minInactivos >= 180 ? 'Alta' : ap.minInactivos >= 90 ? 'Media' : 'Baja',
+          recomendacion: ap.porcentajeActivo < 50
+            ? 'Mover parte de la carga o fusionar actividades con otro puesto.'
+            : ap.porcentajeActivo < 80
+              ? 'Ajustar horarios, formatos y rondines para ocupar tiempos de inactividad.'
+              : 'Mantener operación; revisar solo microespacios o picos.'
+        }));
+
+      return {
+        turnos,
+        filtrados,
+        totalApostamientos: resumen.totalApostamientos,
+        totalElementos: resumen.totalElementos,
+        totalActivos: resumen.totalActivos,
+        totalInactivos: resumen.totalInactivos,
+        totalDisponibles: resumen.totalDisponibles,
+        promedioActivo: resumen.promedioActivo,
+        inactividadPromedio: resumen.inactividadPromedio,
+        niveles: nivelesGlobalesDelTurno,
+        topInactivos,
+        topTecnologias,
+        oportunidadesAutomatizacion,
+        redistribucion,
+        diagnostico: obtenerDiagnosticoUnificado(resumen.promedioActivo)
+      };
+    }
+
+    function actualizarConsolidado() {
+      const r = calcularResumenAjustado(apostamientosCapturados);
+      const set = (id, texto) => { const el = document.getElementById(id); if (el) el.textContent = texto; };
+      set('gen_totalApostamientos', r.totalApostamientos);
+      set('gen_totalElementos', r.totalElementos);
+      set('gen_puestosCriticos', r.puestosCriticos);
+      set('gen_promedioActivo', r.promedioActivo.toFixed(1) + '%');
+      set('gen_totalInactivos', r.totalInactivos.toFixed(0));
+      set('gen_horasInactivas', r.horasInactividad.toFixed(1) + ' h');
+      set('gen_turnosEquivalentes', r.turnosEquivalentes.toFixed(2));
+      set('gen_guardiasEquivalentes', r.guardiasEquivalentes.toFixed(2));
+    }
+
+    function renderTablaApostamientos() {
+      renderFiltroTablaTurnos();
+      const tbody = document.querySelector('#tablaApostamientos tbody');
+      if (!tbody) return;
+      const filtroTurno = document.getElementById('filtroTablaTurno') ? document.getElementById('filtroTablaTurno').value : '__TODOS__';
+      tbody.innerHTML = '';
+
+      apostamientosCapturados.forEach((ap, index) => {
+        const turnoActual = String(ap.turnoAnalizado || '').trim();
+        if (filtroTurno !== '__TODOS__' && turnoActual !== filtroTurno) return;
+        if (!coincideNivelDashboard(ap, dashboardNivelFiltro)) return;
+        const a = calcularApostamientoAjustado(ap);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${escapeHtml(a.nombre || '')}</td>
+          <td>${escapeHtml(a.turnoAnalizado || '')}</td>
+          <td>${escapeHtml(a.ubicacion || '')}</td>
+          <td>${escapeHtml(a.tipoPuesto || '')}</td>
+          <td>${escapeHtml(a.riesgo || '')}</td>
+          <td>${a.elementos}</td>
+          <td>${escapeHtml(a.turnoNombre || '')}</td>
+          <td>${a.minActivos.toFixed(0)}</td>
+          <td>${a.minInactivos.toFixed(0)}</td>
+          <td>${a.porcentajeActivo.toFixed(1)}%</td>
+          <td>${escapeHtml(a.decisionSugerida || '')}</td>
+          <td>${(a.funciones || []).length}</td>
+          <td>${(a.formatos || []).length}</td>
+          <td class="no-print">
+            <span class="edit-link" onclick="editarApostamiento(${index})">Editar</span>
+            <span class="copy-link" onclick="duplicarApostamiento(${index})">Duplicar</span>
+            <span class="danger-link" onclick="eliminarApostamiento(${index})">Eliminar</span>
+          </td>`;
+        tbody.appendChild(tr);
+      });
+
+      if (!tbody.children.length) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td colspan="14" style="text-align:center;color:#64748b;">No hay apostamientos para el filtro seleccionado.</td>`;
+        tbody.appendChild(tr);
+      }
+    }
+
+    function generarRadiografiaGeneral() {
+      actualizarConsolidado();
+      const planta = val('clienteServicio') || 'No especificada';
+      const fecha = val('fecha') || 'No especificada';
+      const analista = val('analista') || 'No especificado';
+      const ubicacion = val('ubicacionGeneral') || 'No especificada';
+      const obsGenerales = val('observacionesGenerales') || 'Sin observaciones generales';
+      const r = calcularResumenAjustado(apostamientosCapturados);
+      const datos = r.datos;
+      const bajo = datos.filter(a => a.porcentajeActivo < 50).map(a => `${a.nombre} - ${a.turnoAnalizado}`);
+      const intermedio = datos.filter(a => a.porcentajeActivo >= 50 && a.porcentajeActivo < 80).map(a => `${a.nombre} - ${a.turnoAnalizado}`);
+      const alto = datos.filter(a => a.porcentajeActivo >= 80).map(a => `${a.nombre} - ${a.turnoAnalizado}`);
+      const tecnologiasGlobales = [...new Set(datos.flatMap(a => Array.isArray(a.tecnologiasRecomendadas) ? a.tecnologiasRecomendadas : []).filter(Boolean))];
+      const diagnosticoGeneral = obtenerDiagnosticoUnificado(r.promedioActivo);
+
+      const detalleTurnos = datos.map((a, i) => {
+        const funcionesTecnologia = (a.funciones || []).filter(f => f.tecnologia === 'Sí').length;
+        const funcionesSinTecnologia = (a.funciones || []).filter(f => f.tecnologia === 'No').length;
+        return `${i + 1}. ${a.nombre} - ${a.turnoAnalizado || 'Turno no especificado'}\n- Ubicación: ${a.ubicacion || 'No especificada'}\n- Riesgo: ${a.riesgo || 'No especificado'}\n- Elementos: ${a.elementos || 0}\n- Horario del turno: ${a.turnoNombre || 'No especificado'}\n- Min disponibles operativos: ${a.minDisponibles.toFixed(0)}\n- Min activos operativos: ${a.minActivos.toFixed(0)}\n- Min de inactividad operativa: ${a.minInactivos.toFixed(0)}\n- % activo operativo: ${a.porcentajeActivo.toFixed(1)}%\n- Funciones con apoyo tecnológico actual: ${funcionesTecnologia}\n- Funciones sin apoyo tecnológico actual: ${funcionesSinTecnologia}\n- Tecnología recomendada detectada: ${(a.tecnologiasRecomendadas && a.tecnologiasRecomendadas.length) ? a.tecnologiasRecomendadas.join(', ') : 'No detectada'}\n- Decisión sugerida: ${a.decisionSugerida || 'Sin definir'}`;
+      }).join('\n\n');
+
+      const texto = `PLANTA / SERVICIO: ${planta}\nUBICACIÓN GENERAL: ${ubicacion}\nFECHA DEL ANÁLISIS: ${fecha}\nANALISTA RESPONSABLE: ${analista}\n\nRESUMEN GENERAL:\n- Total de apostamientos analizados: ${r.totalApostamientos}\n- Total de elementos requeridos / analizados: ${r.totalElementos}\n- Puestos clasificados como críticos: ${r.puestosCriticos}\n- Tiempo disponible operativo ajustado: ${r.totalDisponibles.toFixed(0)} min\n- Tiempo activo operativo acumulado: ${r.totalActivos.toFixed(0)} min\n- Tiempo de inactividad operativa acumulada: ${r.totalInactivos.toFixed(0)} min\n- Horas de inactividad equivalentes: ${r.horasInactividad.toFixed(1)} h\n- Turnos equivalentes de 12 h: ${r.turnosEquivalentes.toFixed(2)}\n- Guardias equivalentes a 60 h semanales: ${r.guardiasEquivalentes.toFixed(2)}\n- Promedio general de actividad operativa: ${r.promedioActivo.toFixed(1)}%\n\nDIAGNÓSTICO GENERAL:\n${diagnosticoGeneral}\n\nAPOSTAMIENTOS CON BAJO APROVECHAMIENTO (<50%):\n${bajo.length ? bajo.join(', ') : 'No se detectaron'}\n\nAPOSTAMIENTOS CON APROVECHAMIENTO INTERMEDIO (50% A 79.9%):\n${intermedio.length ? intermedio.join(', ') : 'No se detectaron'}\n\nAPOSTAMIENTOS CON ALTA OCUPACIÓN (>=80%):\n${alto.length ? alto.join(', ') : 'No se detectaron'}\n\nTECNOLOGÍA RECOMENDADA DETECTADA EN LA PLANTA:\n${tecnologiasGlobales.length ? tecnologiasGlobales.join(', ') : 'No se detectó tecnología propuesta'}\n\nOBSERVACIONES GENERALES DE LA PLANTA:\n${obsGenerales}\n\nDETALLE DE TURNOS Y COBERTURA POR APOSTAMIENTO:\n${detalleTurnos || 'Sin detalle de turnos capturado'}\n\nRECOMENDACIÓN GENERAL:\nSe recomienda tomar decisiones por apostamiento y por turno, no en conjunto. Priorizar primero los puestos críticos, después los turnos saturados y finalmente los turnos con alto tiempo de inactividad. Integrar tecnología donde el proceso sea repetitivo, documental o de control.`;
+
+      const el = document.getElementById('radiografiaGeneral');
+      if (el) el.textContent = texto;
+    }
+
+    function sincronizarCalculosAntesDeSalida() {
+      try {
+        renderTablaApostamientos();
+        actualizarConsolidado();
+        generarRadiografiaGeneral();
+        if (document.getElementById('dashboardRender')) actualizarDashboardInteractivo();
+      } catch (e) {
+        console.error('Error sincronizando cálculos:', e);
+      }
+    }
+
+    function imprimirReporteCompleto() {
+      sincronizarCalculosAntesDeSalida();
+      window.__impresionSincronizada = true;
+      window.print();
+      window.__impresionSincronizada = false;
+    }
+
+    const __printOriginalCliente = window.print.bind(window);
+    window.print = function() {
+      if (!window.__impresionSincronizada) sincronizarCalculosAntesDeSalida();
+      return __printOriginalCliente();
+    };
+
+    window.addEventListener('beforeprint', sincronizarCalculosAntesDeSalida);
+
+    cargarPlantasEnSelect();
+    cancelarEdicion(false);
+    actualizarConsolidado();
+    registrarEventosGlobalesAutoguardado();
+    restaurarBorradorAutomaticoAlInicio();
+    renderListaPlantasGuardadas();
+
+    setInterval(() => {
+      guardarBorradorAutomatico(true);
+    }, 10000);
+  </script>
+</body>
+</html>
